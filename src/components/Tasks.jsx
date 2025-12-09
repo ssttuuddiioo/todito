@@ -238,15 +238,6 @@ export function Tasks() {
 
     if (!over) return;
 
-    // Check if dropped on focus zone
-    if (over.id === 'focus-drop-zone') {
-      const draggedTask = tasks.find(t => t.id === active.id);
-      if (draggedTask && !focusQueue.find(t => t.id === draggedTask.id)) {
-        setFocusQueue(prev => [...prev, draggedTask]);
-      }
-      return;
-    }
-
     const activeTask = tasks.find(t => t.id === active.id);
     if (!activeTask) return;
 
@@ -970,22 +961,10 @@ function TaskCard({ task, project, onEdit, onDelete, onToggleComplete, onExpand,
       onClick={() => onEdit?.(task)}
     >
       <div className="space-y-2">
-        {/* Title row */}
-        <div className="flex items-start gap-2">
-          {/* Title */}
-          <h4 className={`font-medium text-gray-900 flex-1 text-sm leading-tight ${task.status === 'done' ? 'line-through text-gray-400' : ''}`}>
-            {task.title}
-          </h4>
-          
-          {/* Start pomodoro button */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onPomodoro?.(task); }}
-            className="p-1 rounded hover:bg-red-50 text-gray-300 hover:text-red-600 transition-colors shrink-0"
-            title="Start pomodoro"
-          >
-            🍅
-          </button>
-        </div>
+        {/* Title */}
+        <h4 className={`font-medium text-gray-900 text-sm leading-tight ${task.status === 'done' ? 'line-through text-gray-400' : ''}`}>
+          {task.title}
+        </h4>
 
         {/* Indicators row */}
         <div className="flex items-center justify-between gap-2">
