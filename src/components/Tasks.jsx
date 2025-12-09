@@ -881,8 +881,10 @@ function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleCompl
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-xl p-4 ${column.color} min-h-[400px] transition-colors ${
-        isOver ? 'ring-2 ring-primary-500 ring-offset-2' : ''
+      className={`rounded-xl p-4 ${column.color} min-h-[400px] transition-all duration-200 ${
+        isOver 
+          ? 'ring-4 ring-primary-500 ring-offset-2 scale-[1.02] shadow-lg bg-opacity-90' 
+          : ''
       }`}
     >
       <div className="flex items-center justify-between mb-4">
@@ -893,7 +895,12 @@ function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleCompl
       </div>
 
       <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-3">
+        <div className={`space-y-3 transition-all duration-200 ${isOver ? 'border-2 border-dashed border-primary-400 rounded-lg p-2 -m-2' : ''}`}>
+          {isOver && (
+            <div className="text-center py-2 text-primary-600 font-medium text-sm animate-pulse">
+              Drop here →
+            </div>
+          )}
           {tasks.map(task => (
             <SortableTaskCard
               key={task.id}
@@ -907,8 +914,8 @@ function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleCompl
             />
           ))}
           {tasks.length === 0 && (
-            <div className="text-center py-8 text-gray-400 text-sm">
-              No tasks
+            <div className={`text-center py-8 text-sm transition-colors ${isOver ? 'text-primary-600 font-medium' : 'text-gray-400'}`}>
+              {isOver ? 'Drop task here' : 'No tasks'}
             </div>
           )}
         </div>
