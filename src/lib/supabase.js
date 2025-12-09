@@ -5,6 +5,8 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase credentials not found. Using mock data.');
+  console.warn('VITE_SUPABASE_URL:', supabaseUrl ? 'Found' : 'Missing');
+  console.warn('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Found' : 'Missing');
 }
 
 export const supabase = supabaseUrl && supabaseAnonKey 
