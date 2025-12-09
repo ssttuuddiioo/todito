@@ -111,10 +111,8 @@ Rules:
 
 
 export async function parseNotesWithAI(noteText) {
-  if (!isAnthropicAvailable()) {
-    console.error('Anthropic API not available. Key:', import.meta.env.VITE_ANTHROPIC_API_KEY ? 'Present' : 'Missing');
-    throw new Error('Anthropic API key not configured. Please add VITE_ANTHROPIC_API_KEY to .env.local and restart the dev server.');
-  }
+  // In production, serverless function handles auth
+  // In development, local proxy handles it
 
   if (!noteText || noteText.trim().length === 0) {
     return getEmptyResult();

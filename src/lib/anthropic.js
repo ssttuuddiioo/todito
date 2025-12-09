@@ -1,19 +1,24 @@
-import Anthropic from '@anthropic-ai/sdk';
+// In production, we use Vercel serverless function - no client-side API key needed
+// In development, we use local proxy server
 
-const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+const isProduction = import.meta.env.PROD;
 
-if (!apiKey) {
-  console.warn(
-    '⚠️ VITE_ANTHROPIC_API_KEY not found. AI parsing will not work. Please add your Anthropic API key to .env.local'
-  );
-  console.warn('Available env vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
+// Only check for API key in development (local proxy needs it configured)
+if (!isProduction) {
+  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.warn(
+      '⚠️ VITE_ANTHROPIC_API_KEY not found. Make sure the local proxy server has access to the API key.'
+    );
+  } else {
+    console.log('✅ Anthropic API key loaded for development');
+  }
 } else {
-  console.log('✅ Anthropic API key loaded successfully');
+  console.log('✅ Production mode - using Vercel serverless function for AI');
 }
 
-export const anthropic = apiKey ? new Anthropic({ apiKey }) : null;
-
+// In production, AI is always "available" via serverless function
+// In development, we assume the proxy server has the key
 export function isAnthropicAvailable() {
-  return anthropic !== null && apiKey !== undefined && apiKey !== null;
+  return true; // Always try - serverless function handles auth in production
 }
-
