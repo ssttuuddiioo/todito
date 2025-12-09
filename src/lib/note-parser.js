@@ -121,9 +121,13 @@ export async function parseNotesWithAI(noteText) {
   }
 
   try {
-    // Use proxy server to avoid CORS issues
-    const proxyUrl = import.meta.env.VITE_PROXY_URL || 'http://localhost:3001';
-    const response = await fetch(`${proxyUrl}/api/anthropic/messages`, {
+    // Use Vercel serverless function in production, local proxy in development
+    const isProduction = import.meta.env.PROD;
+    const apiUrl = isProduction 
+      ? '/api/anthropic/messages'  // Vercel serverless function
+      : (import.meta.env.VITE_PROXY_URL || 'http://localhost:3001') + '/api/anthropic/messages';
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
