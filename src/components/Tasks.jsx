@@ -1196,12 +1196,6 @@ function FocusDropZone({ focusQueue, totalPomodoros, onRemoveTask, onClearQueue,
           </div>
         )}
 
-        {/* Empty state hint */}
-        {focusQueue.length === 0 && isDropTarget && (
-          <div className="text-center py-4 text-red-500 font-medium animate-pulse">
-            Drop task here!
-          </div>
-        )}
       </div>
     </div>
   );
