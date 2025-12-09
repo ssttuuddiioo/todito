@@ -1,7 +1,7 @@
 {
-  "name": "Opportunity Tracker",
-  "short_name": "Opportunities",
-  "description": "Track sales opportunities and manage client projects",
+  "name": "Todito",
+  "short_name": "Todito",
+  "description": "AI-powered task management with Pomodoro timer and project tracking",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f9fafb",
@@ -9,29 +9,19 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
   "categories": ["business", "productivity"],
   "shortcuts": [
     {
-      "name": "Add Opportunity",
+      "name": "Add Task",
       "short_name": "Add",
-      "description": "Quickly add a new opportunity",
-      "url": "/?action=add-opportunity",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "description": "Quickly add a new task",
+      "url": "/?action=add-task"
     }
   ]
 }
-
-
-
