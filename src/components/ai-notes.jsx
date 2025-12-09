@@ -183,8 +183,12 @@ export function AINotes({ onNavigate }) {
 
   const handleCreateProject = async (project, index) => {
     try {
+      if (!project || !project.name) {
+        throw new Error('Project name is required');
+      }
+      
       const projectData = {
-        name: project.name,
+        name: project.name.trim(),
         client: project.client || '',
         status: project.status || 'in_progress',
         phase: project.phase || '',
@@ -194,11 +198,15 @@ export function AINotes({ onNavigate }) {
         notes: project.notes || '',
         milestones: project.milestones || [],
       };
-      await addProject(projectData);
+      
+      console.log('Creating project:', projectData);
+      const createdProject = await addProject(projectData);
+      console.log('Project created successfully:', createdProject);
       setCreatedItems(prev => new Set([...prev, `project-${index}`]));
     } catch (err) {
       console.error('Failed to create project:', err);
-      alert(`Failed to create project: ${err.message}`);
+      console.error('Project data:', project);
+      alert(`Failed to create project: ${err.message || 'Unknown error'}`);
     }
   };
 

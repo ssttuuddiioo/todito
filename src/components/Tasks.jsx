@@ -537,7 +537,7 @@ export function Tasks() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        {/* Focus Zone - Drag tasks here to queue for focus session */}
+        {/* Focus Zone - Add tasks via + button only */}
         <FocusDropZone 
           focusQueue={focusQueue}
           totalPomodoros={focusQueuePomodoros}
@@ -550,7 +550,6 @@ export function Tasks() {
               startPomodoro(); // Start with no specific task
             }
           }}
-          isDropTarget={!!activeId}
         />
 
         <div className="mt-4">
@@ -1120,21 +1119,14 @@ function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddTo
   );
 }
 
-// Focus Drop Zone Component - Drag tasks here to queue for focus session
-function FocusDropZone({ focusQueue, totalPomodoros, onRemoveTask, onClearQueue, onStartFocus, isDropTarget }) {
-  const { setNodeRef, isOver } = useDroppable({ id: 'focus-drop-zone' });
-
+// Focus Drop Zone Component - Add tasks via + button only
+function FocusDropZone({ focusQueue, totalPomodoros, onRemoveTask, onClearQueue, onStartFocus }) {
   return (
     <div
-      ref={setNodeRef}
       className={`relative rounded-xl border-2 border-dashed transition-all duration-300 ${
-        isOver 
-          ? 'border-red-400 bg-red-50 scale-[1.02]' 
-          : isDropTarget 
-            ? 'border-red-300 bg-red-50/50'
-            : focusQueue.length > 0 
-              ? 'border-red-200 bg-red-50/30'
-              : 'border-gray-200 bg-gray-50/50'
+        focusQueue.length > 0 
+          ? 'border-red-200 bg-red-50/30'
+          : 'border-gray-200 bg-gray-50/50'
       }`}
     >
       <div className="p-4">
@@ -1145,7 +1137,7 @@ function FocusDropZone({ focusQueue, totalPomodoros, onRemoveTask, onClearQueue,
               <h3 className="font-bold text-gray-900">Focus Zone</h3>
               <p className="text-xs text-gray-500">
                 {focusQueue.length === 0 
-                  ? 'Drag tasks here or start a quick focus session'
+                  ? 'Use + button on tasks to add to focus queue'
                   : `${totalPomodoros} pomodoro${totalPomodoros !== 1 ? 's' : ''} queued`
                 }
               </p>
