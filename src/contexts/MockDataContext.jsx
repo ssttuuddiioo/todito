@@ -18,6 +18,7 @@ export function MockDataProvider({ children }) {
   const [expenses, setExpenses] = useState([]);
   const [notesArchive, setNotesArchive] = useState([]);
   const [ignoredItems, setIgnoredItems] = useState([]);
+  const [archivedTasks, setArchivedTasks] = useState([]);
 
   // --- Supabase CRUD Operations ---
   
@@ -275,6 +276,48 @@ export function MockDataProvider({ children }) {
     return { data, error: null };
   }, []);
 
+  // Archive completed tasks
+  const archiveCompletedTasks = useCallback(async () => {
+    const completedTasks = tasks.filter(t => t.status === 'done');
+    
+    if (completedTasks.length === 0) {
+      return { data: null, error: { message: 'No completed tasks to archive' } };
+    }
+
+    // Add to archived tasks
+    const archived = completedTasks.map(task => ({
+      ...task,
+      archived_at: new Date().toISOString(),
+    }));
+
+    if (!supabase) {
+      // Mock mode - just move to archivedTasks
+      setArchivedTasks(prev => [...archived, ...prev]);
+      setTasks(prev => prev.filter(t => t.status !== 'done'));
+      return { data: archived, error: null };
+    }
+
+    // In Supabase mode, we could create an archived_tasks table or just remove from tasks
+    // For now, we'll store in local state and remove from tasks
+    setArchivedTasks(prev => [...archived, ...prev]);
+    
+    // Delete completed tasks from Supabase
+    const taskIds = completedTasks.map(t => t.id);
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .in('id', taskIds);
+
+    if (error) {
+      console.error('Error archiving tasks:', error);
+      return { data: null, error };
+    }
+
+    // Remove from local state
+    setTasks(prev => prev.filter(t => t.status !== 'done'));
+    return { data: archived, error: null };
+  }, [tasks, supabase]);
+
   const value = {
     isLoading,
     isMockMode,
@@ -290,6 +333,7 @@ export function MockDataProvider({ children }) {
     expenses,
     notesArchive,
     ignoredItems,
+    archivedTasks,
     
     // CRM Actions
     addContact: createItem('contacts', setContacts),
@@ -312,6 +356,7 @@ export function MockDataProvider({ children }) {
     updateTask: updateItem('tasks', setTasks),
     deleteTask: deleteItem('tasks', setTasks),
     reorderTasks,
+    archiveCompletedTasks,
     
     // Time Tracking
     logTime: createItem('time_entries', setTimeEntries),

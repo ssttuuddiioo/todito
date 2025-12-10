@@ -10,6 +10,7 @@ import { Revenue } from '@/components/Revenue';
 import { Expenses } from '@/components/Expenses';
 import { AINotes } from '@/components/ai-notes';
 import { IgnoredTasks } from '@/components/IgnoredTasks';
+import { TaskArchive } from '@/components/TaskArchive';
 import { Navigation } from '@/components/Navigation';
 
 function AppContent() {
@@ -58,7 +59,9 @@ function AppContent() {
       case 'projects':
         return <Projects />;
       case 'tasks':
-        return <Tasks />;
+        return <Tasks onNavigate={setCurrentView} />;
+      case 'task-archive':
+        return <TaskArchive onNavigate={setCurrentView} />;
       case 'timeline':
         return <Timeline />;
       case 'ai-notes':

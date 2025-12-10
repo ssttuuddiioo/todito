@@ -19,6 +19,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
+import { useMockData } from '@/contexts/MockDataContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Sheet } from '@/components/ui/Sheet';
@@ -58,7 +59,7 @@ const TEAMS = [
   { id: 'ops', label: 'Ops' },
 ];
 
-export function Tasks() {
+export function Tasks({ onNavigate }) {
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
   const [filter, setFilter] = useState('all'); // 'mine' | 'all' | 'completed'
   const [projectFilter, setProjectFilter] = useState('all'); // 'all' | project_id
@@ -91,6 +92,7 @@ export function Tasks() {
     getCompletedTasks 
   } = useTasks();
   const { projects, getActiveProjects } = useProjects();
+  const { archiveCompletedTasks } = useMockData();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -241,12 +243,24 @@ export function Tasks() {
     const activeTask = tasks.find(t => t.id === active.id);
     if (!activeTask) return;
 
-    // Check if dropped on a column
+    // Check if dropped on a column (empty space in column)
     const overColumn = STATUS_COLUMNS.find(col => col.id === over.id);
     if (overColumn) {
-      // Dropped on column - change status
+      // Dropped on column - change status and move to TOP (order 0)
       if (activeTask.status !== overColumn.id) {
-        updateTask(activeTask.id, { status: overColumn.id });
+        const tasksInColumn = tasksByStatus[overColumn.id] || [];
+        // Move task to top of target column
+        const updatedTasks = tasks.map(t => {
+          if (t.id === active.id) {
+            return { ...t, status: overColumn.id, order: 0 };
+          }
+          // Shift all tasks in target column down by 1
+          if (t.status === overColumn.id) {
+            return { ...t, order: (t.order || 0) + 1 };
+          }
+          return t;
+        });
+        reorderTasks(updatedTasks);
       }
       return;
     }
@@ -255,15 +269,40 @@ export function Tasks() {
     const overTask = tasks.find(t => t.id === over.id);
     if (overTask) {
       if (activeTask.status !== overTask.status) {
-        // Moving to different column
-        updateTask(activeTask.id, { status: overTask.status });
+        // Moving to different column - insert at position of overTask
+        const tasksInTargetColumn = tasksByStatus[overTask.status] || [];
+        const targetIndex = tasksInTargetColumn.findIndex(t => t.id === over.id);
+        
+        const updatedTasks = tasks.map(t => {
+          if (t.id === active.id) {
+            return { ...t, status: overTask.status, order: targetIndex };
+          }
+          // Shift tasks in target column
+          if (t.status === overTask.status && (t.order || 0) >= targetIndex) {
+            return { ...t, order: (t.order || 0) + 1 };
+          }
+          return t;
+        });
+        
+        // Normalize orders
+        const normalizedTasks = updatedTasks.map(t => {
+          if (t.status === overTask.status) {
+            const columnTasks = updatedTasks.filter(tt => tt.status === overTask.status);
+            const sorted = columnTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
+            const newIndex = sorted.findIndex(tt => tt.id === t.id);
+            return { ...t, order: newIndex };
+          }
+          return t;
+        });
+        reorderTasks(normalizedTasks);
       } else if (active.id !== over.id) {
         // Reordering within same column
-        const oldIndex = tasksByStatus[activeTask.status].findIndex(t => t.id === active.id);
-        const newIndex = tasksByStatus[activeTask.status].findIndex(t => t.id === over.id);
+        const columnTasks = tasksByStatus[activeTask.status] || [];
+        const oldIndex = columnTasks.findIndex(t => t.id === active.id);
+        const newIndex = columnTasks.findIndex(t => t.id === over.id);
         
         if (oldIndex !== -1 && newIndex !== -1) {
-          const newOrder = arrayMove(tasksByStatus[activeTask.status], oldIndex, newIndex);
+          const newOrder = arrayMove(columnTasks, oldIndex, newIndex);
           const updatedTasks = tasks.map(t => {
             const orderIndex = newOrder.findIndex(nt => nt.id === t.id);
             if (orderIndex !== -1) {
@@ -344,6 +383,13 @@ export function Tasks() {
     updateTask(task.id, { status: newStatus });
   };
 
+  const handleArchive = async () => {
+    const result = await archiveCompletedTasks();
+    if (result.error) {
+      alert(`Failed to archive tasks: ${result.error.message}`);
+    }
+  };
+
   const activeTask = activeId ? tasks.find(t => t.id === activeId) : null;
 
   // Start pomodoro for a specific task
@@ -375,6 +421,9 @@ export function Tasks() {
           <p className="text-gray-500 mt-1">Manage your tasks and track progress.</p>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="secondary" onClick={() => onNavigate?.('task-archive')}>
+            📦 Archive
+          </Button>
           <Button onClick={() => setIsSheetOpen(true)}>+ Add Task</Button>
         </div>
       </div>
@@ -562,6 +611,7 @@ export function Tasks() {
               onToggleComplete={handleToggleComplete}
               onAddToQueue={addToFocusQueue}
               onPomodoro={startPomodoro}
+              onArchive={handleArchive}
             />
           ) : (
             <ListView
@@ -855,7 +905,7 @@ export function Tasks() {
 }
 
 // Kanban Board Component
-function KanbanBoard({ tasksByStatus, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro }) {
+function KanbanBoard({ tasksByStatus, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, onArchive }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {STATUS_COLUMNS.map(column => (
@@ -869,14 +919,21 @@ function KanbanBoard({ tasksByStatus, projects, onEdit, onDelete, onToggleComple
           onToggleComplete={onToggleComplete}
           onAddToQueue={onAddToQueue}
           onPomodoro={onPomodoro}
+          onArchive={onArchive}
         />
       ))}
     </div>
   );
 }
 
-function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro }) {
+function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, onArchive }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
+
+  const handleArchive = async () => {
+    if (window.confirm(`Archive all ${tasks.length} completed task${tasks.length !== 1 ? 's' : ''}?`)) {
+      await onArchive?.();
+    }
+  };
 
   return (
     <div
@@ -889,9 +946,20 @@ function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleCompl
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-gray-900">{column.label}</h3>
-        <span className="bg-white/60 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">
-          {tasks.length}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="bg-white/60 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">
+            {tasks.length}
+          </span>
+          {column.id === 'done' && tasks.length > 0 && (
+            <button
+              onClick={handleArchive}
+              className="text-xs text-gray-600 hover:text-gray-900 bg-white/60 hover:bg-white/80 px-2 py-1 rounded transition-colors"
+              title="Archive all completed tasks"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
