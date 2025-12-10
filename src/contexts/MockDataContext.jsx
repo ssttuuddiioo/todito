@@ -74,14 +74,31 @@ export function MockDataProvider({ children }) {
       return { data: newItem, error: null };
     }
 
+    // Clean the item - convert empty strings to null for optional fields, keep required fields
+    const cleanItem = Object.entries(item).reduce((acc, [key, value]) => {
+      if (value === undefined) return acc;
+      
+      // Convert empty strings to null for optional fields (except title which is required)
+      if (value === '') {
+        acc[key] = key === 'title' ? '' : null;
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+
+    console.log(`Creating ${table}:`, cleanItem);
+
     const { data, error } = await supabase
       .from(table)
-      .insert([item])
+      .insert([cleanItem])
       .select()
       .single();
 
     if (error) {
       console.error(`Error creating ${table}:`, error);
+      console.error('Item data:', cleanItem);
+      console.error('Error details:', error.message, error.details, error.hint);
       return { data: null, error };
     }
 

@@ -157,6 +157,15 @@ export async function parseNotesWithAI(noteText) {
 
     const text = content.text;
     
+    // Check if AI says there's no data to extract
+    if (text.toLowerCase().includes('not enough information') || 
+        text.toLowerCase().includes('no structured data') ||
+        text.toLowerCase().includes('cannot generate') ||
+        text.toLowerCase().includes('would be empty')) {
+      console.log('AI returned no extractable data, returning empty result');
+      return getEmptyResult();
+    }
+    
     // Try to extract JSON from the response
     let jsonText = extractJSON(text);
 
@@ -166,6 +175,11 @@ export async function parseNotesWithAI(noteText) {
     } catch (parseError) {
       console.error('Failed to parse JSON response:', parseError);
       console.error('Response text:', jsonText);
+      // If JSON parsing fails, check if it's because there's no JSON at all
+      if (!jsonText.includes('{') || !jsonText.includes('}')) {
+        console.log('No JSON found in response, returning empty result');
+        return getEmptyResult();
+      }
       throw new Error('Invalid JSON response from AI. Please try again.');
     }
     
