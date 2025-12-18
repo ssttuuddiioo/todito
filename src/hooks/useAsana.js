@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { buildAsanaOAuthUrl, getAsanaApiBaseUrl, isAsanaConfigured, mapTasksForAsanaExport } from '@/lib/asana';
 
-// Fallback user ID for development/mock mode
-const MOCK_USER_ID = 'dev-user-00000000-0000-0000-0000-000000000001';
+// Fallback user ID for development/mock mode (must be valid UUID format)
+const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 /**
  * Hook for managing Asana connection and API interactions
