@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { parseNotesWithAI, parseNotesWithPatterns } from '@/lib/note-parser';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
@@ -8,7 +8,9 @@ import { useMockData } from '@/contexts/MockDataContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Sheet } from '@/components/ui/Sheet';
+import { AsanaExportSheet } from '@/components/AsanaExportSheet';
 import { formatDate } from '@/lib/utils';
+import { isAsanaConfigured } from '@/lib/asana';
 
 export function AINotes({ onNavigate }) {
   const [noteText, setNoteText] = useState('');
@@ -20,6 +22,10 @@ export function AINotes({ onNavigate }) {
   const [showArchive, setShowArchive] = useState(false);
   const [selectedArchive, setSelectedArchive] = useState(null);
   const [taskModifications, setTaskModifications] = useState({}); // Track energy, pomodoro changes
+  
+  // Multi-select for Asana export
+  const [selectedTaskIndices, setSelectedTaskIndices] = useState(new Set());
+  const [showAsanaExport, setShowAsanaExport] = useState(false);
 
   const { addTask } = useTasks();
   const { projects, addProject, updateProject } = useProjects();
@@ -72,6 +78,52 @@ export function AINotes({ onNavigate }) {
     setCreatedItems(new Set());
     setSessionIgnoredItems(new Set());
     setTaskModifications({});
+    setSelectedTaskIndices(new Set());
+  };
+
+  // Multi-select helpers
+  const toggleTaskSelection = (index) => {
+    setSelectedTaskIndices(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  };
+
+  const selectAllTasks = () => {
+    if (!parsedData?.tasks) return;
+    const allIndices = parsedData.tasks
+      .map((_, i) => i)
+      .filter(i => !createdItems.has(`task-${i}`) && !sessionIgnoredItems.has(`task-${i}`));
+    setSelectedTaskIndices(new Set(allIndices));
+  };
+
+  const clearTaskSelection = () => {
+    setSelectedTaskIndices(new Set());
+  };
+
+  // Get selected tasks with modifications applied
+  const selectedTasksForExport = useMemo(() => {
+    if (!parsedData?.tasks) return [];
+    return Array.from(selectedTaskIndices)
+      .map(index => {
+        const task = parsedData.tasks[index];
+        const mods = taskModifications[`task-${index}`] || {};
+        return { ...task, ...mods, _index: index };
+      });
+  }, [parsedData, selectedTaskIndices, taskModifications]);
+
+  const handleAsanaExportComplete = (result) => {
+    // Mark exported tasks as created
+    selectedTasksForExport.forEach(task => {
+      setCreatedItems(prev => new Set([...prev, `task-${task._index}`]));
+    });
+    setSelectedTaskIndices(new Set());
+    setShowAsanaExport(false);
   };
 
   const handleLaterItem = (type, item, index) => {
@@ -451,7 +503,37 @@ export function AINotes({ onNavigate }) {
 
               {/* Tasks */}
               {parsedData.tasks.length > 0 && (
-                <ExtractedSection title="Tasks" count={parsedData.tasks.length}>
+                <ExtractedSection 
+                  title="Tasks" 
+                  count={parsedData.tasks.length}
+                  headerActions={
+                    <div className="flex items-center gap-2">
+                      {selectedTaskIndices.size > 0 ? (
+                        <button
+                          onClick={clearTaskSelection}
+                          className="text-xs text-gray-500 hover:text-gray-700"
+                        >
+                          Clear ({selectedTaskIndices.size})
+                        </button>
+                      ) : (
+                        <button
+                          onClick={selectAllTasks}
+                          className="text-xs text-gray-500 hover:text-gray-700"
+                        >
+                          Select All
+                        </button>
+                      )}
+                      {isAsanaConfigured() && selectedTaskIndices.size > 0 && (
+                        <Button
+                          onClick={() => setShowAsanaExport(true)}
+                          className="text-xs px-2 py-1 h-auto"
+                        >
+                          Export to Asana ({selectedTaskIndices.size})
+                        </Button>
+                      )}
+                    </div>
+                  }
+                >
                   {parsedData.tasks.map((task, i) => {
                     if (sessionIgnoredItems.has(`task-${i}`)) {
                       return (
@@ -465,12 +547,15 @@ export function AINotes({ onNavigate }) {
                     }
                     const modifiedTask = getTaskWithMods(task, i);
                     const isCreated = createdItems.has(`task-${i}`);
+                    const isSelected = selectedTaskIndices.has(i);
                     return (
                       <ExtractedTaskItem
                         key={`task-${i}`}
                         task={modifiedTask}
                         index={i}
                         isCreated={isCreated}
+                        isSelected={isSelected}
+                        onToggleSelect={() => toggleTaskSelection(i)}
                         onCreate={() => handleCreateTask(task, i)}
                         onLater={() => handleLaterItem('task', task, i)}
                         onUpdateField={(field, value) => handleUpdateTaskField(i, field, value)}
@@ -722,16 +807,27 @@ export function AINotes({ onNavigate }) {
           </div>
         )}
       </Sheet>
+
+      {/* Asana Export Sheet */}
+      <AsanaExportSheet
+        isOpen={showAsanaExport}
+        onClose={() => setShowAsanaExport(false)}
+        tasks={selectedTasksForExport}
+        onExportComplete={handleAsanaExportComplete}
+      />
     </div>
   );
 }
 
-function ExtractedSection({ title, count, children }) {
+function ExtractedSection({ title, count, children, headerActions }) {
   return (
     <div className="space-y-2">
-      <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-        {title} ({count})
-      </h4>
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+          {title} ({count})
+        </h4>
+        {headerActions}
+      </div>
       <div className="space-y-2">{children}</div>
     </div>
   );
@@ -782,7 +878,7 @@ const PRIORITY_OPTIONS = [
   { id: 'high', label: '🔴 High', color: 'bg-red-100 border-red-300 text-red-700' },
 ];
 
-function ExtractedTaskItem({ task, index, isCreated, onCreate, onLater, onUpdateField }) {
+function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect, onCreate, onLater, onUpdateField }) {
   const [showDetails, setShowDetails] = useState(false);
   const currentEnergy = task.energy || '';
   const currentPriority = task.priority || '';
@@ -795,10 +891,20 @@ function ExtractedTaskItem({ task, index, isCreated, onCreate, onLater, onUpdate
   };
 
   return (
-    <Card className={`p-4 ${isCreated ? 'bg-green-50 border-green-200' : ''}`}>
+    <Card className={`p-4 ${isCreated ? 'bg-green-50 border-green-200' : ''} ${isSelected ? 'ring-2 ring-primary-500 ring-offset-1' : ''}`}>
       <div className="space-y-3">
         {/* Title row */}
         <div className="flex items-start gap-2">
+          {/* Selection checkbox - only show when not created */}
+          {!isCreated && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onToggleSelect}
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+              title="Select for Asana export"
+            />
+          )}
           <div className="flex-1 min-w-0">
             <div className="font-medium text-gray-900">{task.title}</div>
             {task.subtitle && (

@@ -24,7 +24,9 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Sheet } from '@/components/ui/Sheet';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
+import { AsanaExportSheet } from '@/components/AsanaExportSheet';
 import { formatDate, daysUntil } from '@/lib/utils';
+import { isAsanaConfigured } from '@/lib/asana';
 
 const PRIORITY_COLORS = {
   high: 'bg-red-100 text-red-700 border-red-200',
@@ -60,27 +62,7 @@ const TEAMS = [
 ];
 
 export function Tasks({ onNavigate }) {
-  const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
-  const [filter, setFilter] = useState('all'); // 'mine' | 'all' | 'completed'
-  const [projectFilter, setProjectFilter] = useState('all'); // 'all' | project_id
-  const [energyFilter, setEnergyFilter] = useState(null); // Single-select energy type or null for all
-  const [pomodoroFilter, setPomodoroFilter] = useState(null); // Single-select: 1, 2, 3, 4 or null for all
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
-  const [activeId, setActiveId] = useState(null);
-  const [expandedTask, setExpandedTask] = useState(null); // For detail modal
-  const [pomodoroTask, setPomodoroTask] = useState(null); // For pomodoro timer
-  const [focusQueue, setFocusQueue] = useState([]); // Tasks queued for focus session
-  
-  // Toggle helpers - single select (clicking same one deselects)
-  const selectEnergy = (energyId) => {
-    setEnergyFilter(prev => prev === energyId ? null : energyId);
-  };
-  
-  const selectPomodoro = (count) => {
-    setPomodoroFilter(prev => prev === count ? null : count);
-  };
-
+  // Hooks must be called first
   const { 
     tasks, 
     addTask, 
@@ -93,6 +75,23 @@ export function Tasks({ onNavigate }) {
   } = useTasks();
   const { projects, getActiveProjects } = useProjects();
   const { archiveCompletedTasks } = useMockData();
+
+  const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
+  const [filter, setFilter] = useState('all'); // 'mine' | 'all' | 'completed'
+  const [projectFilter, setProjectFilter] = useState('all'); // 'all' | project_id
+  const [energyFilter, setEnergyFilter] = useState(null); // Single-select energy type or null for all
+  const [pomodoroFilter, setPomodoroFilter] = useState(null); // Single-select: 1, 2, 3, 4 or null for all
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [activeId, setActiveId] = useState(null);
+  const [expandedTask, setExpandedTask] = useState(null); // For detail modal
+  const [pomodoroTask, setPomodoroTask] = useState(null); // For pomodoro timer
+  const [focusQueue, setFocusQueue] = useState([]); // Tasks queued for focus session
+  
+  // Multi-select mode for Asana export
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState(new Set());
+  const [showAsanaExport, setShowAsanaExport] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -197,6 +196,52 @@ export function Tasks({ onNavigate }) {
 
     return { energy: energyCounts, pomodoro: pomoCounts };
   }, [filter, projectFilter, tasks, getMyTasks, getCompletedTasks]);
+
+  // Toggle helpers - single select (clicking same one deselects)
+  const selectEnergy = (energyId) => {
+    setEnergyFilter(prev => prev === energyId ? null : energyId);
+  };
+  
+  const selectPomodoro = (count) => {
+    setPomodoroFilter(prev => prev === count ? null : count);
+  };
+
+  // Multi-select helpers
+  const toggleTaskSelection = (taskId) => {
+    setSelectedTaskIds(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) {
+        next.delete(taskId);
+      } else {
+        next.add(taskId);
+      }
+      return next;
+    });
+  };
+
+  const selectAllVisibleTasks = () => {
+    const visibleIds = filteredTasks.map(t => t.id);
+    setSelectedTaskIds(new Set(visibleIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedTaskIds(new Set());
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedTaskIds(new Set());
+  };
+
+  // Get selected tasks for export
+  const selectedTasksForExport = useMemo(() => {
+    return tasks?.filter(t => selectedTaskIds.has(t.id)) || [];
+  }, [tasks, selectedTaskIds]);
+
+  const handleAsanaExportComplete = () => {
+    exitSelectMode();
+    setShowAsanaExport(false);
+  };
 
   // Add task to focus queue
   const addToFocusQueue = (task) => {
@@ -424,9 +469,65 @@ export function Tasks({ onNavigate }) {
           <Button variant="secondary" onClick={() => onNavigate?.('task-archive')}>
             📦 Archive
           </Button>
+          {isAsanaConfigured() && (
+            selectMode ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  {selectedTaskIds.size} selected
+                </span>
+                <Button
+                  variant="secondary"
+                  onClick={exitSelectMode}
+                  className="text-sm"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => setShowAsanaExport(true)}
+                  disabled={selectedTaskIds.size === 0}
+                  className="text-sm"
+                >
+                  Export to Asana
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={() => setSelectMode(true)}
+                className="text-sm"
+              >
+                Export to Asana
+              </Button>
+            )
+          )}
           <Button onClick={() => setIsSheetOpen(true)}>+ Add Task</Button>
         </div>
       </div>
+
+      {/* Select Mode Banner */}
+      {selectMode && (
+        <div className="flex items-center justify-between p-3 bg-primary-50 border border-primary-200 rounded-lg">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-primary-700">
+              Select tasks to export to Asana
+            </span>
+            <button
+              onClick={selectAllVisibleTasks}
+              className="text-xs text-primary-600 hover:text-primary-800 underline"
+            >
+              Select all visible ({filteredTasks.length})
+            </button>
+            {selectedTaskIds.size > 0 && (
+              <button
+                onClick={clearSelection}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
+                Clear selection
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Focus Zone wraps in its own DndContext area below */}
 
@@ -612,6 +713,9 @@ export function Tasks({ onNavigate }) {
               onAddToQueue={addToFocusQueue}
               onPomodoro={startPomodoro}
               onArchive={handleArchive}
+              selectMode={selectMode}
+              selectedTaskIds={selectedTaskIds}
+              onToggleSelect={toggleTaskSelection}
             />
           ) : (
             <ListView
@@ -622,6 +726,9 @@ export function Tasks({ onNavigate }) {
               onToggleComplete={handleToggleComplete}
               onAddToQueue={addToFocusQueue}
               onPomodoro={startPomodoro}
+              selectMode={selectMode}
+              selectedTaskIds={selectedTaskIds}
+              onToggleSelect={toggleTaskSelection}
             />
           )}
         </div>
@@ -900,12 +1007,20 @@ export function Tasks({ onNavigate }) {
           </div>
         )}
       </Sheet>
+
+      {/* Asana Export Sheet */}
+      <AsanaExportSheet
+        isOpen={showAsanaExport}
+        onClose={() => setShowAsanaExport(false)}
+        tasks={selectedTasksForExport}
+        onExportComplete={handleAsanaExportComplete}
+      />
     </div>
   );
 }
 
 // Kanban Board Component
-function KanbanBoard({ tasksByStatus, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, onArchive }) {
+function KanbanBoard({ tasksByStatus, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, onArchive, selectMode, selectedTaskIds, onToggleSelect }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {STATUS_COLUMNS.map(column => (
@@ -920,13 +1035,16 @@ function KanbanBoard({ tasksByStatus, projects, onEdit, onDelete, onToggleComple
           onAddToQueue={onAddToQueue}
           onPomodoro={onPomodoro}
           onArchive={onArchive}
+          selectMode={selectMode}
+          selectedTaskIds={selectedTaskIds}
+          onToggleSelect={onToggleSelect}
         />
       ))}
     </div>
   );
 }
 
-function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, onArchive }) {
+function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, onArchive, selectMode, selectedTaskIds, onToggleSelect }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
   const handleArchive = async () => {
@@ -979,6 +1097,9 @@ function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleCompl
               onToggleComplete={onToggleComplete}
               onAddToQueue={onAddToQueue}
               onPomodoro={onPomodoro}
+              selectMode={selectMode}
+              isSelected={selectedTaskIds?.has(task.id)}
+              onToggleSelect={onToggleSelect}
             />
           ))}
           {tasks.length === 0 && (
@@ -992,7 +1113,7 @@ function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleCompl
   );
 }
 
-function SortableTaskCard({ task, project, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro }) {
+function SortableTaskCard({ task, project, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, selectMode, isSelected, onToggleSelect }) {
   const {
     attributes,
     listeners,
@@ -1000,7 +1121,7 @@ function SortableTaskCard({ task, project, onEdit, onDelete, onToggleComplete, o
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({ id: task.id, disabled: selectMode });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -1009,7 +1130,7 @@ function SortableTaskCard({ task, project, onEdit, onDelete, onToggleComplete, o
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} {...attributes} {...(selectMode ? {} : listeners)}>
       <TaskCard
         task={task}
         project={project}
@@ -1018,25 +1139,49 @@ function SortableTaskCard({ task, project, onEdit, onDelete, onToggleComplete, o
         onToggleComplete={onToggleComplete}
         onAddToQueue={onAddToQueue}
         onPomodoro={onPomodoro}
+        selectMode={selectMode}
+        isSelected={isSelected}
+        onToggleSelect={onToggleSelect}
       />
     </div>
   );
 }
 
-function TaskCard({ task, project, onEdit, onDelete, onToggleComplete, onExpand, onPomodoro, onAddToQueue, isDragging = false }) {
+function TaskCard({ task, project, onEdit, onDelete, onToggleComplete, onExpand, onPomodoro, onAddToQueue, isDragging = false, selectMode = false, isSelected = false, onToggleSelect }) {
   const days = daysUntil(task.due_date);
   const isOverdue = days !== null && days < 0 && task.status !== 'done';
   const energyInfo = ENERGY_TYPES.find(e => e.id === task.energy);
   const pomodoroCount = task.pomodoro_count || 0;
 
+  const handleClick = () => {
+    if (selectMode) {
+      onToggleSelect?.(task.id);
+    } else {
+      onEdit?.(task);
+    }
+  };
+
   return (
     <Card 
-      className={`p-3 pb-8 cursor-pointer hover:shadow-md transition-all relative ${isDragging ? 'shadow-lg ring-2 ring-primary-500 cursor-grabbing' : ''}`}
-      onClick={() => onEdit?.(task)}
+      className={`p-3 pb-8 cursor-pointer hover:shadow-md transition-all relative ${isDragging ? 'shadow-lg ring-2 ring-primary-500 cursor-grabbing' : ''} ${isSelected ? 'ring-2 ring-primary-500 ring-offset-1 bg-primary-50' : ''}`}
+      onClick={handleClick}
     >
       <div className="space-y-2">
+        {/* Selection checkbox in select mode */}
+        {selectMode && (
+          <div className="absolute top-2 right-2">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onToggleSelect?.(task.id)}
+              onClick={(e) => e.stopPropagation()}
+              className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+            />
+          </div>
+        )}
+        
         {/* Title */}
-        <h4 className={`font-medium text-gray-900 text-sm leading-tight ${task.status === 'done' ? 'line-through text-gray-400' : ''}`}>
+        <h4 className={`font-medium text-gray-900 text-sm leading-tight ${task.status === 'done' ? 'line-through text-gray-400' : ''} ${selectMode ? 'pr-6' : ''}`}>
           {task.title}
         </h4>
 
@@ -1093,7 +1238,7 @@ function TaskCard({ task, project, onEdit, onDelete, onToggleComplete, onExpand,
 }
 
 // List View Component
-function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro }) {
+function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, selectMode, selectedTaskIds, onToggleSelect }) {
   const sortedTasks = [...tasks].sort((a, b) => {
     // Sort by priority first, then by due date
     const priorityOrder = { high: 0, medium: 1, low: 2 };
@@ -1111,6 +1256,9 @@ function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddTo
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
+            {selectMode && (
+              <th className="px-3 py-3 w-10"></th>
+            )}
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
@@ -1124,17 +1272,35 @@ function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddTo
             const project = projects?.find(p => p.id === task.project_id);
             const days = daysUntil(task.due_date);
             const isOverdue = days !== null && days < 0 && task.status !== 'done';
+            const isSelected = selectedTaskIds?.has(task.id);
 
             return (
-              <tr key={task.id} className="hover:bg-gray-50 transition-colors group">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
+              <tr 
+                key={task.id} 
+                className={`hover:bg-gray-50 transition-colors group ${isSelected ? 'bg-primary-50' : ''}`}
+                onClick={selectMode ? () => onToggleSelect?.(task.id) : undefined}
+              >
+                {selectMode && (
+                  <td className="px-3 py-4">
                     <input
                       type="checkbox"
-                      checked={task.status === 'done'}
-                      onChange={() => onToggleComplete?.(task)}
-                      className="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      checked={isSelected}
+                      onChange={() => onToggleSelect?.(task.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
                     />
+                  </td>
+                )}
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    {!selectMode && (
+                      <input
+                        type="checkbox"
+                        checked={task.status === 'done'}
+                        onChange={() => onToggleComplete?.(task)}
+                        className="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                    )}
                     <span className={`font-medium ${task.status === 'done' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
                       {task.title}
                     </span>
@@ -1171,12 +1337,14 @@ function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddTo
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right text-sm font-medium">
-                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => onAddToQueue?.(task)} className="text-orange-500 hover:text-orange-700" title="Add to queue">+</button>
-                    <button onClick={() => onPomodoro?.(task)} className="text-red-600 hover:text-red-800" title="Focus">🍅</button>
-                    <button onClick={() => onEdit?.(task)} className="text-gray-600 hover:text-gray-900">Edit</button>
-                    <button onClick={() => onDelete?.(task.id)} className="text-red-600 hover:text-red-900">Delete</button>
-                  </div>
+                  {!selectMode && (
+                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => onAddToQueue?.(task)} className="text-orange-500 hover:text-orange-700" title="Add to queue">+</button>
+                      <button onClick={() => onPomodoro?.(task)} className="text-red-600 hover:text-red-800" title="Focus">🍅</button>
+                      <button onClick={() => onEdit?.(task)} className="text-gray-600 hover:text-gray-900">Edit</button>
+                      <button onClick={() => onDelete?.(task.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                    </div>
+                  )}
                 </td>
               </tr>
             );
