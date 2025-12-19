@@ -24,9 +24,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Sheet } from '@/components/ui/Sheet';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
-import { AsanaExportSheet } from '@/components/AsanaExportSheet';
 import { formatDate, daysUntil } from '@/lib/utils';
-import { isAsanaConfigured } from '@/lib/asana';
 
 const PRIORITY_COLORS = {
   high: 'bg-red-100 text-red-700 border-red-200',
@@ -69,29 +67,21 @@ export function Tasks({ onNavigate }) {
     updateTask, 
     deleteTask, 
     reorderTasks,
-    getMyTasks, 
     getAllActiveTasks, 
-    getCompletedTasks 
   } = useTasks();
   const { projects, getActiveProjects } = useProjects();
   const { archiveCompletedTasks } = useMockData();
 
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
-  const [filter, setFilter] = useState('all'); // 'mine' | 'all' | 'completed'
   const [projectFilter, setProjectFilter] = useState('all'); // 'all' | project_id
   const [energyFilter, setEnergyFilter] = useState(null); // Single-select energy type or null for all
-  const [pomodoroFilter, setPomodoroFilter] = useState(null); // Single-select: 1, 2, 3, 4 or null for all
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [expandedTask, setExpandedTask] = useState(null); // For detail modal
   const [pomodoroTask, setPomodoroTask] = useState(null); // For pomodoro timer
   const [focusQueue, setFocusQueue] = useState([]); // Tasks queued for focus session
-  
-  // Multi-select mode for Asana export
-  const [selectMode, setSelectMode] = useState(false);
-  const [selectedTaskIds, setSelectedTaskIds] = useState(new Set());
-  const [showAsanaExport, setShowAsanaExport] = useState(false);
+  const [showFocusQueue, setShowFocusQueue] = useState(false); // Toggle focus queue dropdown
 
   const [formData, setFormData] = useState({
     title: '',
@@ -109,20 +99,9 @@ export function Tasks({ onNavigate }) {
   // Get active projects for filter buttons
   const activeProjects = getActiveProjects();
 
-  // Filter tasks based on selected filter and project
+  // Filter tasks - show all active tasks, filter by project and energy only
   const filteredTasks = useMemo(() => {
-    let filtered;
-    switch (filter) {
-      case 'mine':
-        filtered = getMyTasks();
-        break;
-      case 'completed':
-        filtered = getCompletedTasks();
-        break;
-      case 'all':
-      default:
-        filtered = tasks || [];
-    }
+    let filtered = tasks?.filter(t => t.status !== 'done') || [];
     
     // Apply project filter
     if (projectFilter === 'none') {
@@ -136,38 +115,17 @@ export function Tasks({ onNavigate }) {
       filtered = filtered.filter(t => t.energy === energyFilter);
     }
     
-    // Apply pomodoro filter (single-select)
-    if (pomodoroFilter) {
-      filtered = filtered.filter(t => {
-        const taskPomos = t.pomodoro_count || 0;
-        if (pomodoroFilter === 4) {
-          return taskPomos >= 4; // 4+ pomodoros
-        }
-        return taskPomos === pomodoroFilter;
-      });
-    }
-    
     return filtered;
-  }, [filter, projectFilter, energyFilter, pomodoroFilter, tasks, getMyTasks, getCompletedTasks]);
+  }, [projectFilter, energyFilter, tasks]);
 
   // Calculate total pomodoros in focus queue
   const focusQueuePomodoros = useMemo(() => {
     return focusQueue.reduce((sum, task) => sum + (task.pomodoro_count || 1), 0);
   }, [focusQueue]);
 
-  // Calculate task counts for filter badges (based on current project/status filter, before energy/pomo filters)
+  // Calculate task counts for energy filter badges
   const taskCounts = useMemo(() => {
-    let baseTasks;
-    switch (filter) {
-      case 'mine':
-        baseTasks = getMyTasks();
-        break;
-      case 'completed':
-        baseTasks = getCompletedTasks();
-        break;
-      default:
-        baseTasks = tasks || [];
-    }
+    let baseTasks = tasks?.filter(t => t.status !== 'done') || [];
     
     // Apply project filter
     if (projectFilter === 'none') {
@@ -180,67 +138,18 @@ export function Tasks({ onNavigate }) {
     const energyCounts = {};
     ENERGY_TYPES.forEach(e => { energyCounts[e.id] = 0; });
     
-    // Count by pomodoro
-    const pomoCounts = { 1: 0, 2: 0, 3: 0, 4: 0 };
-    
     baseTasks.forEach(t => {
-      // Energy count
       if (t.energy && energyCounts[t.energy] !== undefined) {
         energyCounts[t.energy]++;
       }
-      // Pomodoro count
-      const pomos = t.pomodoro_count || 0;
-      if (pomos >= 4) pomoCounts[4]++;
-      else if (pomos > 0) pomoCounts[pomos]++;
     });
 
-    return { energy: energyCounts, pomodoro: pomoCounts };
-  }, [filter, projectFilter, tasks, getMyTasks, getCompletedTasks]);
+    return { energy: energyCounts };
+  }, [projectFilter, tasks]);
 
   // Toggle helpers - single select (clicking same one deselects)
   const selectEnergy = (energyId) => {
     setEnergyFilter(prev => prev === energyId ? null : energyId);
-  };
-  
-  const selectPomodoro = (count) => {
-    setPomodoroFilter(prev => prev === count ? null : count);
-  };
-
-  // Multi-select helpers
-  const toggleTaskSelection = (taskId) => {
-    setSelectedTaskIds(prev => {
-      const next = new Set(prev);
-      if (next.has(taskId)) {
-        next.delete(taskId);
-      } else {
-        next.add(taskId);
-      }
-      return next;
-    });
-  };
-
-  const selectAllVisibleTasks = () => {
-    const visibleIds = filteredTasks.map(t => t.id);
-    setSelectedTaskIds(new Set(visibleIds));
-  };
-
-  const clearSelection = () => {
-    setSelectedTaskIds(new Set());
-  };
-
-  const exitSelectMode = () => {
-    setSelectMode(false);
-    setSelectedTaskIds(new Set());
-  };
-
-  // Get selected tasks for export
-  const selectedTasksForExport = useMemo(() => {
-    return tasks?.filter(t => selectedTaskIds.has(t.id)) || [];
-  }, [tasks, selectedTaskIds]);
-
-  const handleAsanaExportComplete = () => {
-    exitSelectMode();
-    setShowAsanaExport(false);
   };
 
   // Add task to focus queue
@@ -466,92 +375,105 @@ export function Tasks({ onNavigate }) {
           <p className="text-gray-500 mt-1">Manage your tasks and track progress.</p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Focus Button with queue dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                if (focusQueue.length > 0) {
+                  setShowFocusQueue(!showFocusQueue);
+                } else {
+                  startPomodoro();
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all bg-red-600 text-white hover:bg-red-700 shadow-lg"
+            >
+              <span>🍅</span>
+              {focusQueue.length > 0 ? `Focus (${focusQueuePomodoros})` : 'Focus'}
+            </button>
+            
+            {/* Focus Queue Dropdown */}
+            {showFocusQueue && focusQueue.length > 0 && (
+              <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200 p-3 z-50">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-medium text-gray-900 text-sm">Focus Queue</span>
+                  <button
+                    onClick={() => setFocusQueue([])}
+                    className="text-xs text-gray-400 hover:text-gray-600"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
+                  {focusQueue.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center justify-between gap-2 bg-gray-50 rounded-lg px-3 py-2"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs shrink-0">
+                          {'🍅'.repeat(Math.min(task.pomodoro_count || 1, 3))}
+                          {(task.pomodoro_count || 1) >= 4 && '🍇'}
+                        </span>
+                        <span className="text-sm text-gray-700 truncate">{task.title}</span>
+                      </div>
+                      <button
+                        onClick={() => setFocusQueue(prev => prev.filter(t => t.id !== task.id))}
+                        className="text-gray-400 hover:text-red-600 text-xs shrink-0"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    setShowFocusQueue(false);
+                    startPomodoro(focusQueue[0]);
+                  }}
+                  className="w-full py-2 rounded-lg font-medium text-sm bg-red-600 text-white hover:bg-red-700 transition-colors"
+                >
+                  ▶ Start Session ({focusQueuePomodoros} 🍅)
+                </button>
+              </div>
+            )}
+          </div>
+          
           <Button variant="secondary" onClick={() => onNavigate?.('task-archive')}>
             📦 Archive
           </Button>
-          {isAsanaConfigured() && (
-            selectMode ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">
-                  {selectedTaskIds.size} selected
-                </span>
-                <Button
-                  variant="secondary"
-                  onClick={exitSelectMode}
-                  className="text-sm"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => setShowAsanaExport(true)}
-                  disabled={selectedTaskIds.size === 0}
-                  className="text-sm"
-                >
-                  Export to Asana
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="secondary"
-                onClick={() => setSelectMode(true)}
-                className="text-sm"
-              >
-                Export to Asana
-              </Button>
-            )
-          )}
           <Button onClick={() => setIsSheetOpen(true)}>+ Add Task</Button>
         </div>
       </div>
 
-      {/* Select Mode Banner */}
-      {selectMode && (
-        <div className="flex items-center justify-between p-3 bg-primary-50 border border-primary-200 rounded-lg">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-primary-700">
-              Select tasks to export to Asana
-            </span>
-            <button
-              onClick={selectAllVisibleTasks}
-              className="text-xs text-primary-600 hover:text-primary-800 underline"
-            >
-              Select all visible ({filteredTasks.length})
-            </button>
-            {selectedTaskIds.size > 0 && (
-              <button
-                onClick={clearSelection}
-                className="text-xs text-gray-500 hover:text-gray-700"
-              >
-                Clear selection
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Focus Zone wraps in its own DndContext area below */}
-
-      {/* View Toggle & Filters */}
+      {/* Filters Row */}
       <div className="flex flex-wrap gap-4 items-center justify-between">
-        {/* Filter Tabs */}
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-          {[
-            { id: 'all', label: 'All Tasks' },
-            { id: 'mine', label: 'My Tasks' },
-            { id: 'completed', label: 'Completed' },
-          ].map(tab => (
+        {/* Energy Filter - Single select with counts */}
+        <div className="flex flex-wrap gap-1 items-center">
+          <span className="text-xs text-gray-500 mr-1">Filter:</span>
+          {ENERGY_TYPES.map(energy => (
             <button
-              key={tab.id}
-              onClick={() => setFilter(tab.id)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
-                filter === tab.id
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-900'
+              key={energy.id}
+              onClick={() => selectEnergy(energy.id)}
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-all border ${
+                energyFilter === energy.id
+                  ? 'bg-primary-100 border-primary-300 text-primary-700'
+                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
               }`}
             >
-              {tab.label}
+              {energy.label}
+              {taskCounts.energy[energy.id] > 0 && (
+                <span className="ml-1 text-[10px] opacity-60">({taskCounts.energy[energy.id]})</span>
+              )}
             </button>
           ))}
+          {energyFilter && (
+            <button
+              onClick={() => setEnergyFilter(null)}
+              className="text-xs text-gray-400 hover:text-gray-600 ml-1"
+            >
+              ✕ Clear
+            </button>
+          )}
         </div>
 
         {/* View Toggle */}
@@ -576,70 +498,6 @@ export function Tasks({ onNavigate }) {
           >
             List
           </button>
-        </div>
-      </div>
-
-      {/* Energy & Pomodoro Filters */}
-      <div className="flex flex-wrap gap-4 items-start">
-        {/* Energy Filter - Single select with counts */}
-        <div className="flex flex-col gap-1">
-          <span className="text-xs text-gray-500 px-1">Energy type:</span>
-          <div className="flex flex-wrap gap-1">
-            {ENERGY_TYPES.map(energy => (
-              <button
-                key={energy.id}
-                onClick={() => selectEnergy(energy.id)}
-                className={`px-2 py-1 rounded-md text-xs font-medium transition-all border ${
-                  energyFilter === energy.id
-                    ? 'bg-primary-100 border-primary-300 text-primary-700'
-                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                {energy.label}
-                {taskCounts.energy[energy.id] > 0 && (
-                  <span className="ml-1 text-[10px] opacity-60">({taskCounts.energy[energy.id]})</span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        {/* Pomodoro Filter - Single select with counts */}
-        <div className="flex flex-col gap-1">
-          <span className="text-xs text-gray-500 px-1">🍅 Pomodoros:</span>
-          <div className="flex items-center gap-1">
-            {[1, 2, 3].map(count => (
-              <button
-                key={count}
-                onClick={() => selectPomodoro(count)}
-                className={`px-2 h-7 rounded-md text-xs font-medium transition-all flex items-center justify-center border ${
-                  pomodoroFilter === count
-                    ? 'bg-red-100 border-red-300 text-red-700'
-                    : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                }`}
-                title={`${count} pomodoro${count > 1 ? 's' : ''}`}
-              >
-                {count}
-                {taskCounts.pomodoro[count] > 0 && (
-                  <span className="ml-0.5 text-[10px] opacity-60">({taskCounts.pomodoro[count]})</span>
-                )}
-              </button>
-            ))}
-            <button
-              onClick={() => selectPomodoro(4)}
-              className={`px-2 h-7 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 border ${
-                pomodoroFilter === 4
-                  ? 'bg-purple-100 border-purple-300 text-purple-700'
-                  : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-              }`}
-              title="Big tasks (4+ pomodoros)"
-            >
-              🍇
-              {taskCounts.pomodoro[4] > 0 && (
-                <span className="text-[10px] opacity-60">({taskCounts.pomodoro[4]})</span>
-              )}
-            </button>
-          </div>
         </div>
       </div>
 
@@ -680,29 +538,14 @@ export function Tasks({ onNavigate }) {
         </button>
       </div>
 
-      {/* Content - all in DndContext for focus zone drag support */}
+      {/* Content - DndContext for drag-and-drop support */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        {/* Focus Zone - Add tasks via + button only */}
-        <FocusDropZone 
-          focusQueue={focusQueue}
-          totalPomodoros={focusQueuePomodoros}
-          onRemoveTask={(taskId) => setFocusQueue(prev => prev.filter(t => t.id !== taskId))}
-          onClearQueue={() => setFocusQueue([])}
-          onStartFocus={() => {
-            if (focusQueue.length > 0) {
-              startPomodoro(focusQueue[0]);
-            } else {
-              startPomodoro(); // Start with no specific task
-            }
-          }}
-        />
-
-        <div className="mt-4">
+        <div>
           {viewMode === 'kanban' ? (
             <KanbanBoard
               tasksByStatus={tasksByStatus}
@@ -713,9 +556,6 @@ export function Tasks({ onNavigate }) {
               onAddToQueue={addToFocusQueue}
               onPomodoro={startPomodoro}
               onArchive={handleArchive}
-              selectMode={selectMode}
-              selectedTaskIds={selectedTaskIds}
-              onToggleSelect={toggleTaskSelection}
             />
           ) : (
             <ListView
@@ -726,9 +566,6 @@ export function Tasks({ onNavigate }) {
               onToggleComplete={handleToggleComplete}
               onAddToQueue={addToFocusQueue}
               onPomodoro={startPomodoro}
-              selectMode={selectMode}
-              selectedTaskIds={selectedTaskIds}
-              onToggleSelect={toggleTaskSelection}
             />
           )}
         </div>
@@ -1008,19 +845,12 @@ export function Tasks({ onNavigate }) {
         )}
       </Sheet>
 
-      {/* Asana Export Sheet */}
-      <AsanaExportSheet
-        isOpen={showAsanaExport}
-        onClose={() => setShowAsanaExport(false)}
-        tasks={selectedTasksForExport}
-        onExportComplete={handleAsanaExportComplete}
-      />
     </div>
   );
 }
 
 // Kanban Board Component
-function KanbanBoard({ tasksByStatus, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, onArchive, selectMode, selectedTaskIds, onToggleSelect }) {
+function KanbanBoard({ tasksByStatus, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, onArchive }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {STATUS_COLUMNS.map(column => (
@@ -1035,16 +865,13 @@ function KanbanBoard({ tasksByStatus, projects, onEdit, onDelete, onToggleComple
           onAddToQueue={onAddToQueue}
           onPomodoro={onPomodoro}
           onArchive={onArchive}
-          selectMode={selectMode}
-          selectedTaskIds={selectedTaskIds}
-          onToggleSelect={onToggleSelect}
         />
       ))}
     </div>
   );
 }
 
-function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, onArchive, selectMode, selectedTaskIds, onToggleSelect }) {
+function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, onArchive }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
   const handleArchive = async () => {
@@ -1097,9 +924,6 @@ function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleCompl
               onToggleComplete={onToggleComplete}
               onAddToQueue={onAddToQueue}
               onPomodoro={onPomodoro}
-              selectMode={selectMode}
-              isSelected={selectedTaskIds?.has(task.id)}
-              onToggleSelect={onToggleSelect}
             />
           ))}
           {tasks.length === 0 && (
@@ -1113,7 +937,7 @@ function KanbanColumn({ column, tasks, projects, onEdit, onDelete, onToggleCompl
   );
 }
 
-function SortableTaskCard({ task, project, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, selectMode, isSelected, onToggleSelect }) {
+function SortableTaskCard({ task, project, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro }) {
   const {
     attributes,
     listeners,
@@ -1121,7 +945,7 @@ function SortableTaskCard({ task, project, onEdit, onDelete, onToggleComplete, o
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id, disabled: selectMode });
+  } = useSortable({ id: task.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -1130,7 +954,7 @@ function SortableTaskCard({ task, project, onEdit, onDelete, onToggleComplete, o
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...(selectMode ? {} : listeners)}>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <TaskCard
         task={task}
         project={project}
@@ -1139,49 +963,25 @@ function SortableTaskCard({ task, project, onEdit, onDelete, onToggleComplete, o
         onToggleComplete={onToggleComplete}
         onAddToQueue={onAddToQueue}
         onPomodoro={onPomodoro}
-        selectMode={selectMode}
-        isSelected={isSelected}
-        onToggleSelect={onToggleSelect}
       />
     </div>
   );
 }
 
-function TaskCard({ task, project, onEdit, onDelete, onToggleComplete, onExpand, onPomodoro, onAddToQueue, isDragging = false, selectMode = false, isSelected = false, onToggleSelect }) {
+function TaskCard({ task, project, onEdit, onAddToQueue, isDragging = false }) {
   const days = daysUntil(task.due_date);
   const isOverdue = days !== null && days < 0 && task.status !== 'done';
   const energyInfo = ENERGY_TYPES.find(e => e.id === task.energy);
   const pomodoroCount = task.pomodoro_count || 0;
 
-  const handleClick = () => {
-    if (selectMode) {
-      onToggleSelect?.(task.id);
-    } else {
-      onEdit?.(task);
-    }
-  };
-
   return (
     <Card 
-      className={`p-3 pb-8 cursor-pointer hover:shadow-md transition-all relative ${isDragging ? 'shadow-lg ring-2 ring-primary-500 cursor-grabbing' : ''} ${isSelected ? 'ring-2 ring-primary-500 ring-offset-1 bg-primary-50' : ''}`}
-      onClick={handleClick}
+      className={`p-3 pb-8 cursor-pointer hover:shadow-md transition-all relative ${isDragging ? 'shadow-lg ring-2 ring-primary-500 cursor-grabbing' : ''}`}
+      onClick={() => onEdit?.(task)}
     >
       <div className="space-y-2">
-        {/* Selection checkbox in select mode */}
-        {selectMode && (
-          <div className="absolute top-2 right-2">
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={() => onToggleSelect?.(task.id)}
-              onClick={(e) => e.stopPropagation()}
-              className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
-            />
-          </div>
-        )}
-        
         {/* Title */}
-        <h4 className={`font-medium text-gray-900 text-sm leading-tight ${task.status === 'done' ? 'line-through text-gray-400' : ''} ${selectMode ? 'pr-6' : ''}`}>
+        <h4 className={`font-medium text-gray-900 text-sm leading-tight ${task.status === 'done' ? 'line-through text-gray-400' : ''}`}>
           {task.title}
         </h4>
 
@@ -1238,7 +1038,7 @@ function TaskCard({ task, project, onEdit, onDelete, onToggleComplete, onExpand,
 }
 
 // List View Component
-function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro, selectMode, selectedTaskIds, onToggleSelect }) {
+function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddToQueue, onPomodoro }) {
   const sortedTasks = [...tasks].sort((a, b) => {
     // Sort by priority first, then by due date
     const priorityOrder = { high: 0, medium: 1, low: 2 };
@@ -1256,9 +1056,6 @@ function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddTo
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            {selectMode && (
-              <th className="px-3 py-3 w-10"></th>
-            )}
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
@@ -1272,41 +1069,23 @@ function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddTo
             const project = projects?.find(p => p.id === task.project_id);
             const days = daysUntil(task.due_date);
             const isOverdue = days !== null && days < 0 && task.status !== 'done';
-            const isSelected = selectedTaskIds?.has(task.id);
 
             return (
               <tr 
                 key={task.id} 
-                className={`hover:bg-gray-50 transition-colors group ${isSelected ? 'bg-primary-50' : ''}`}
-                onClick={selectMode ? () => onToggleSelect?.(task.id) : undefined}
+                className="hover:bg-gray-50 transition-colors group"
               >
-                {selectMode && (
-                  <td className="px-3 py-4">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => onToggleSelect?.(task.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
-                    />
-                  </td>
-                )}
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    {!selectMode && (
-                      <input
-                        type="checkbox"
-                        checked={task.status === 'done'}
-                        onChange={() => onToggleComplete?.(task)}
-                        className="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                      />
-                    )}
+                    <input
+                      type="checkbox"
+                      checked={task.status === 'done'}
+                      onChange={() => onToggleComplete?.(task)}
+                      className="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    />
                     <span className={`font-medium ${task.status === 'done' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
                       {task.title}
                     </span>
-                    {task.is_mine && (
-                      <span className="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">Mine</span>
-                    )}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
@@ -1337,14 +1116,12 @@ function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddTo
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right text-sm font-medium">
-                  {!selectMode && (
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => onAddToQueue?.(task)} className="text-orange-500 hover:text-orange-700" title="Add to queue">+</button>
-                      <button onClick={() => onPomodoro?.(task)} className="text-red-600 hover:text-red-800" title="Focus">🍅</button>
-                      <button onClick={() => onEdit?.(task)} className="text-gray-600 hover:text-gray-900">Edit</button>
-                      <button onClick={() => onDelete?.(task.id)} className="text-red-600 hover:text-red-900">Delete</button>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => onAddToQueue?.(task)} className="text-orange-500 hover:text-orange-700" title="Add to queue">+</button>
+                    <button onClick={() => onPomodoro?.(task)} className="text-red-600 hover:text-red-800" title="Focus">🍅</button>
+                    <button onClick={() => onEdit?.(task)} className="text-gray-600 hover:text-gray-900">Edit</button>
+                    <button onClick={() => onDelete?.(task.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                  </div>
                 </td>
               </tr>
             );
@@ -1362,85 +1139,4 @@ function ListView({ tasks, projects, onEdit, onDelete, onToggleComplete, onAddTo
   );
 }
 
-// Focus Drop Zone Component - Add tasks via + button only
-function FocusDropZone({ focusQueue, totalPomodoros, onRemoveTask, onClearQueue, onStartFocus }) {
-  return (
-    <div
-      className={`relative rounded-xl border-2 border-dashed transition-all duration-300 ${
-        focusQueue.length > 0 
-          ? 'border-red-200 bg-red-50/30'
-          : 'border-gray-200 bg-gray-50/50'
-      }`}
-    >
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🍅</span>
-            <div>
-              <h3 className="font-bold text-gray-900">Focus Zone</h3>
-              <p className="text-xs text-gray-500">
-                {focusQueue.length === 0 
-                  ? 'Use + button on tasks to add to focus queue'
-                  : `${totalPomodoros} pomodoro${totalPomodoros !== 1 ? 's' : ''} queued`
-                }
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {focusQueue.length > 0 && (
-              <button
-                onClick={onClearQueue}
-                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
-              >
-                Clear
-              </button>
-            )}
-            <button
-              onClick={onStartFocus}
-              className="px-4 py-2 rounded-lg font-medium text-sm transition-all bg-red-600 text-white hover:bg-red-700 shadow-lg"
-            >
-              {focusQueue.length > 0 ? `▶ Start (${totalPomodoros} 🍅)` : '▶ Quick Focus'}
-            </button>
-          </div>
-        </div>
-
-        {/* Progress bar - fills at 3 pomodoros */}
-        {focusQueue.length > 0 && (
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
-            <div 
-              className="h-full bg-gradient-to-r from-red-400 to-red-600 transition-all duration-500"
-              style={{ width: `${Math.min(100, (totalPomodoros / 3) * 100)}%` }}
-            />
-          </div>
-        )}
-
-        {/* Queued tasks */}
-        {focusQueue.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {focusQueue.map((task) => (
-              <div
-                key={task.id}
-                className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 shadow-sm border border-red-100"
-              >
-                <span className="text-xs">
-                  {'🍅'.repeat(Math.min(task.pomodoro_count || 1, 3))}
-                  {(task.pomodoro_count || 1) >= 4 && '🍇'}
-                </span>
-                <span className="text-sm text-gray-700 max-w-[150px] truncate">{task.title}</span>
-                <button
-                  onClick={() => onRemoveTask(task.id)}
-                  className="text-gray-400 hover:text-red-600 text-xs"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
-}
 
