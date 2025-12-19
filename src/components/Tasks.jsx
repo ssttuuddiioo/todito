@@ -24,7 +24,9 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Sheet } from '@/components/ui/Sheet';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
+import { AsanaExportSheet } from '@/components/AsanaExportSheet';
 import { formatDate, daysUntil } from '@/lib/utils';
+import { isAsanaConfigured } from '@/lib/asana';
 
 const PRIORITY_COLORS = {
   high: 'bg-red-100 text-red-700 border-red-200',
@@ -82,6 +84,7 @@ export function Tasks({ onNavigate }) {
   const [pomodoroTask, setPomodoroTask] = useState(null); // For pomodoro timer
   const [focusQueue, setFocusQueue] = useState([]); // Tasks queued for focus session
   const [showFocusQueue, setShowFocusQueue] = useState(false); // Toggle focus queue dropdown
+  const [showAsanaExport, setShowAsanaExport] = useState(false); // Asana export sheet
 
   const [formData, setFormData] = useState({
     title: '',
@@ -441,6 +444,15 @@ export function Tasks({ onNavigate }) {
           <Button variant="secondary" onClick={() => onNavigate?.('task-archive')}>
             📦 Archive
           </Button>
+          {isAsanaConfigured() && (
+            <Button 
+              variant="secondary" 
+              onClick={() => setShowAsanaExport(true)}
+              className="text-sm"
+            >
+              Export to Asana
+            </Button>
+          )}
           <Button onClick={() => setIsSheetOpen(true)}>+ Add Task</Button>
         </div>
       </div>
@@ -845,6 +857,13 @@ export function Tasks({ onNavigate }) {
         )}
       </Sheet>
 
+      {/* Asana Export Sheet - exports all visible tasks */}
+      <AsanaExportSheet
+        isOpen={showAsanaExport}
+        onClose={() => setShowAsanaExport(false)}
+        tasks={filteredTasks}
+        onExportComplete={() => setShowAsanaExport(false)}
+      />
     </div>
   );
 }
