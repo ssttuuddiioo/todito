@@ -3,7 +3,8 @@ import { useSupabaseTable } from './useSupabaseTable';
 
 /**
  * Hook for managing opportunities (deals in motion)
- * Table: toditox_opportunities
+ * Table: opportunities
+ * Note: Uses 'title' for name, 'expected_close' for due_date, 'closed_won'/'closed_lost' for won/lost
  */
 export function useOpportunities() {
   const {
@@ -14,7 +15,7 @@ export function useOpportunities() {
     update,
     remove,
     refresh,
-  } = useSupabaseTable('toditox_opportunities');
+  } = useSupabaseTable('opportunities');
 
   // Add an opportunity
   const addOpportunity = useCallback(async (opportunity) => {
@@ -42,18 +43,19 @@ export function useOpportunities() {
   // Active opportunities (not won/lost)
   const activeOpportunities = useMemo(() => {
     return opportunities.filter(opp => 
+      opp.stage !== 'closed_won' && opp.stage !== 'closed_lost' &&
       opp.stage !== 'won' && opp.stage !== 'lost'
     );
   }, [opportunities]);
 
   // Won opportunities
   const wonOpportunities = useMemo(() => {
-    return opportunities.filter(opp => opp.stage === 'won');
+    return opportunities.filter(opp => opp.stage === 'closed_won' || opp.stage === 'won');
   }, [opportunities]);
 
   // Lost opportunities
   const lostOpportunities = useMemo(() => {
-    return opportunities.filter(opp => opp.stage === 'lost');
+    return opportunities.filter(opp => opp.stage === 'closed_lost' || opp.stage === 'lost');
   }, [opportunities]);
 
   // Pipeline value (active opportunities)
@@ -70,17 +72,18 @@ export function useOpportunities() {
     );
   }, [wonOpportunities]);
 
-  // Opportunities with upcoming due dates
+  // Opportunities with upcoming due dates (uses expected_close)
   const getUpcomingOpportunities = useCallback((days = 7) => {
     const now = new Date();
     const futureDate = new Date();
     futureDate.setDate(now.getDate() + days);
     
     return activeOpportunities.filter(opp => {
-      if (!opp.due_date) return false;
-      const dueDate = new Date(opp.due_date);
-      return dueDate >= now && dueDate <= futureDate;
-    }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+      const closeDate = opp.expected_close || opp.due_date;
+      if (!closeDate) return false;
+      const parsedDate = new Date(closeDate);
+      return parsedDate >= now && parsedDate <= futureDate;
+    }).sort((a, b) => new Date(a.expected_close || a.due_date) - new Date(b.expected_close || b.due_date));
   }, [activeOpportunities]);
 
   return {

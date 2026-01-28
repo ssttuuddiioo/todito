@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
+// Tables that require user_id on insert
+const TABLES_WITH_USER_ID = ['transactions', 'contacts', 'activities'];
+
 /**
  * Generic hook for Supabase CRUD operations - Real Supabase only (no mock data)
- * @param {string} table - Table name (e.g., 'toditox_transactions')
+ * @param {string} table - Table name (e.g., 'transactions')
  * @param {Object} options - Optional configuration
  * @param {string} options.orderBy - Column to order by (default: 'created_at')
  * @param {boolean} options.ascending - Sort ascending (default: false)
@@ -70,15 +73,20 @@ export function useSupabaseTable(table, options = {}) {
     try {
       setError(null);
 
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Not authenticated');
+      // Get current user for tables that need user_id
+      let insertData = { ...record };
+      
+      if (TABLES_WITH_USER_ID.includes(table)) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('Not authenticated');
+        }
+        insertData.user_id = user.id;
       }
 
       const { data: newRecord, error: createError } = await supabase
         .from(table)
-        .insert([{ ...record, user_id: user.id }])
+        .insert([insertData])
         .select()
         .single();
 

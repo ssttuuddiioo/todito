@@ -1,20 +1,18 @@
 import { useState, useMemo } from 'react';
 import { usePeople } from '@/hooks/usePeople';
-import { useProjects } from '@/hooks/useProjects';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
 import { formatDate } from '@/lib/utils';
 
 export function PeopleView({ onNavigate }) {
-  const [filter, setFilter] = useState('all'); // all, client, vendor, partner
+  const [filter, setFilter] = useState('all'); // all, client, prospect, lead, partner
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [showNewPerson, setShowNewPerson] = useState(false);
   const [showLogContact, setShowLogContact] = useState(false);
   
   const { 
     peopleWithLastContact, 
-    interactions,
     loading, 
     addPerson, 
     editPerson,
@@ -22,7 +20,6 @@ export function PeopleView({ onNavigate }) {
     logInteraction,
     getInteractionsForPerson,
   } = usePeople();
-  const { projects, getProjectById } = useProjects();
 
   // Filter people
   const filteredPeople = useMemo(() => {
@@ -72,7 +69,8 @@ export function PeopleView({ onNavigate }) {
         {[
           { id: 'all', label: 'All' },
           { id: 'client', label: 'Clients' },
-          { id: 'vendor', label: 'Vendors' },
+          { id: 'prospect', label: 'Prospects' },
+          { id: 'lead', label: 'Leads' },
           { id: 'partner', label: 'Partners' },
         ].map(f => (
           <button
@@ -97,8 +95,6 @@ export function PeopleView({ onNavigate }) {
       ) : (
         <div className="space-y-3">
           {sortedPeople.map(person => {
-            const project = person.project_id ? getProjectById(person.project_id) : null;
-            
             return (
               <Card 
                 key={person.id}
@@ -109,9 +105,9 @@ export function PeopleView({ onNavigate }) {
                   <div>
                     <p className="font-semibold text-gray-900">{person.name}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <RoleBadge role={person.role} />
-                      {project && (
-                        <span className="text-xs text-gray-500">{project.name}</span>
+                      <RoleBadge role={person.role || person.status} />
+                      {person.company && (
+                        <span className="text-xs text-gray-500">{person.company}</span>
                       )}
                     </div>
                     {person.email && (
@@ -143,7 +139,6 @@ export function PeopleView({ onNavigate }) {
         isOpen={showNewPerson}
         onClose={() => setShowNewPerson(false)}
         onSave={addPerson}
-        projects={projects}
       />
 
       {/* Person Detail Sheet */}
@@ -153,7 +148,6 @@ export function PeopleView({ onNavigate }) {
           onClose={() => setSelectedPerson(null)}
           person={selectedPerson}
           interactions={getInteractionsForPerson(selectedPerson.id)}
-          project={selectedPerson.project_id ? getProjectById(selectedPerson.project_id) : null}
           onEdit={editPerson}
           onDelete={() => handleDelete(selectedPerson.id)}
           onLogContact={() => setShowLogContact(true)}
@@ -176,24 +170,26 @@ export function PeopleView({ onNavigate }) {
 function RoleBadge({ role }) {
   const styles = {
     client: 'bg-blue-100 text-blue-700',
-    vendor: 'bg-purple-100 text-purple-700',
+    prospect: 'bg-yellow-100 text-yellow-700',
+    lead: 'bg-orange-100 text-orange-700',
     partner: 'bg-green-100 text-green-700',
+    inactive: 'bg-gray-100 text-gray-500',
   };
   
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${styles[role] || styles.client}`}>
+    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${styles[role] || styles.lead}`}>
       {role}
     </span>
   );
 }
 
-function NewPersonSheet({ isOpen, onClose, onSave, projects }) {
+function NewPersonSheet({ isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     role: 'client',
-    project_id: '',
+    company: '',
     notes: '',
   });
   const [saving, setSaving] = useState(false);
@@ -204,19 +200,24 @@ function NewPersonSheet({ isOpen, onClose, onSave, projects }) {
     
     setSaving(true);
     try {
-      await onSave({
+      const result = await onSave({
         name: formData.name.trim(),
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
         role: formData.role,
-        project_id: formData.project_id || null,
+        company: formData.company.trim() || null,
         notes: formData.notes.trim() || null,
       });
-      setFormData({ name: '', email: '', phone: '', role: 'client', project_id: '', notes: '' });
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      setFormData({ name: '', email: '', phone: '', role: 'client', company: '', notes: '' });
       onClose();
     } catch (err) {
       console.error('Failed to add person:', err);
-      alert('Failed to add person');
+      alert('Failed to add person: ' + (err.message || 'Unknown error'));
     } finally {
       setSaving(false);
     }
@@ -245,23 +246,21 @@ function NewPersonSheet({ isOpen, onClose, onSave, projects }) {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           >
             <option value="client">Client</option>
-            <option value="vendor">Vendor</option>
+            <option value="prospect">Prospect</option>
+            <option value="lead">Lead</option>
             <option value="partner">Partner</option>
           </select>
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
-          <select
-            value={formData.project_id}
-            onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
+          <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+          <input
+            type="text"
+            value={formData.company}
+            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="">No project</option>
-            {projects.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+            placeholder="Company name"
+          />
         </div>
         
         <div>
@@ -305,7 +304,7 @@ function NewPersonSheet({ isOpen, onClose, onSave, projects }) {
   );
 }
 
-function PersonDetailSheet({ isOpen, onClose, person, interactions, project, onEdit, onDelete, onLogContact }) {
+function PersonDetailSheet({ isOpen, onClose, person, interactions, onEdit, onDelete, onLogContact }) {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({});
 
@@ -331,13 +330,15 @@ function PersonDetailSheet({ isOpen, onClose, person, interactions, project, onE
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
             <select
-              value={editData.role ?? person.role}
+              value={editData.role ?? person.role ?? person.status}
               onChange={(e) => setEditData({ ...editData, role: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             >
               <option value="client">Client</option>
-              <option value="vendor">Vendor</option>
+              <option value="prospect">Prospect</option>
+              <option value="lead">Lead</option>
               <option value="partner">Partner</option>
+              <option value="inactive">Inactive</option>
             </select>
           </div>
           <div>
@@ -384,7 +385,7 @@ function PersonDetailSheet({ isOpen, onClose, person, interactions, project, onE
         {/* Contact Info */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <RoleBadge role={person.role} />
+            <RoleBadge role={person.role || person.status} />
             <button 
               onClick={() => setEditing(true)}
               className="text-sm text-primary-600 hover:text-primary-700 font-medium"
@@ -393,8 +394,8 @@ function PersonDetailSheet({ isOpen, onClose, person, interactions, project, onE
             </button>
           </div>
           
-          {project && (
-            <p className="text-sm text-gray-500">Project: {project.name}</p>
+          {person.company && (
+            <p className="text-sm text-gray-500">Company: {person.company}</p>
           )}
           
           {person.email && (
@@ -506,7 +507,6 @@ function LogContactSheet({ isOpen, onClose, person, onSave }) {
     try {
       await onSave({
         person_id: person.id,
-        project_id: person.project_id,
         type: formData.type,
         date: formData.date,
         note: formData.note.trim() || null,

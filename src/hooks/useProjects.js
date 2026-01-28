@@ -14,7 +14,7 @@ export function useProjects() {
     update,
     remove,
     refresh,
-  } = useSupabaseTable('toditox_projects');
+  } = useSupabaseTable('projects');
 
   // Add a project
   const addProject = useCallback(async (project) => {
@@ -31,14 +31,20 @@ export function useProjects() {
     return remove(id);
   }, [remove]);
 
-  // Get active projects (not complete)
+  // Get active projects (not complete/completed/cancelled)
   const getActiveProjects = useCallback(() => {
-    return projects?.filter((proj) => proj.status !== 'complete') || [];
+    return projects?.filter((proj) => 
+      proj.status !== 'complete' && 
+      proj.status !== 'completed' && 
+      proj.status !== 'cancelled'
+    ) || [];
   }, [projects]);
 
-  // Get in-progress projects only
+  // Get in-progress projects only (includes 'active' status)
   const getInProgressProjects = useCallback(() => {
-    return projects?.filter((proj) => proj.status === 'in_progress') || [];
+    return projects?.filter((proj) => 
+      proj.status === 'in_progress' || proj.status === 'active'
+    ) || [];
   }, [projects]);
 
   // Get project by ID
@@ -46,12 +52,11 @@ export function useProjects() {
     return projects?.find((proj) => proj.id === id);
   }, [projects]);
 
-  // Get total project value (budget)
+  // Get total project value (from milestones if available, otherwise 0)
   const getTotalProjectValue = useCallback(() => {
-    return projects
-      ?.filter((proj) => proj.status !== 'complete')
-      .reduce((sum, proj) => sum + (parseFloat(proj.budget) || 0), 0) || 0;
-  }, [projects]);
+    // Budget field doesn't exist in current schema, return 0
+    return 0;
+  }, []);
 
   // Get upcoming milestones
   const getUpcomingMilestones = useCallback((days = 7) => {
@@ -107,14 +112,20 @@ export function useProjects() {
     return upcoming[0] || null;
   }, [getProjectById]);
 
-  // Active projects
+  // Active projects (not complete/completed/cancelled)
   const activeProjects = useMemo(() => {
-    return projects?.filter((proj) => proj.status !== 'complete') || [];
+    return projects?.filter((proj) => 
+      proj.status !== 'complete' && 
+      proj.status !== 'completed' && 
+      proj.status !== 'cancelled'
+    ) || [];
   }, [projects]);
 
   // Completed projects
   const completedProjects = useMemo(() => {
-    return projects?.filter((proj) => proj.status === 'complete') || [];
+    return projects?.filter((proj) => 
+      proj.status === 'complete' || proj.status === 'completed'
+    ) || [];
   }, [projects]);
 
   return {

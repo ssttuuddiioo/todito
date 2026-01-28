@@ -16,7 +16,7 @@ export function useTasks() {
     remove,
     refresh,
     setData: setTasks,
-  } = useSupabaseTable('toditox_tasks', { orderBy: 'order' });
+  } = useSupabaseTable('tasks', { orderBy: 'order' });
 
   // Time entries state
   const [timeEntries, setTimeEntries] = useState([]);
@@ -29,7 +29,7 @@ export function useTasks() {
     try {
       setTimeLoading(true);
       const { data, error: fetchError } = await supabase
-        .from('toditox_time_entries')
+        .from('time_entries')
         .select('*')
         .order('date', { ascending: false });
       
@@ -76,7 +76,7 @@ export function useTasks() {
     try {
       const updates = reorderedTasks.map((task, index) => 
         supabase
-          .from('toditox_tasks')
+          .from('tasks')
           .update({ order: index })
           .eq('id', task.id)
       );
@@ -98,7 +98,7 @@ export function useTasks() {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error: insertError } = await supabase
-        .from('toditox_time_entries')
+        .from('time_entries')
         .insert([{ ...entry, user_id: user.id }])
         .select()
         .single();

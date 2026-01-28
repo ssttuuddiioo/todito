@@ -14,7 +14,7 @@ export function useTransactions() {
     update,
     remove,
     refresh,
-  } = useSupabaseTable('toditox_transactions', { orderBy: 'date' });
+  } = useSupabaseTable('transactions', { orderBy: 'date' });
 
   // Add a transaction
   const addTransaction = useCallback(async (transaction) => {

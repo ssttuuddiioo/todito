@@ -184,7 +184,7 @@ export function DashboardV2({ onNavigate }) {
               <Card key={opp.id} className="p-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">{opp.name}</p>
+                    <p className="font-medium text-gray-900">{opp.title || opp.name}</p>
                     <p className="text-sm text-gray-500 mt-0.5">
                       {opp.next_action || opp.contact || 'No next action'}
                     </p>
@@ -216,8 +216,8 @@ function ProjectCard({ project, onNavigate }) {
       <div className="flex items-start justify-between mb-2">
         <div>
           <p className="font-semibold text-gray-900">{project.name}</p>
-          {project.client_name && (
-            <p className="text-sm text-gray-500">{project.client_name}</p>
+          {(project.client || project.client_name) && (
+            <p className="text-sm text-gray-500">{project.client || project.client_name}</p>
           )}
         </div>
         <p className="font-bold text-gray-900">
@@ -290,15 +290,20 @@ function TaskRow({ task }) {
 function StageBadge({ stage }) {
   const styles = {
     lead: 'bg-blue-100 text-blue-700',
+    qualified: 'bg-cyan-100 text-cyan-700',
     proposal: 'bg-purple-100 text-purple-700',
     negotiation: 'bg-amber-100 text-amber-700',
     won: 'bg-green-100 text-green-700',
+    closed_won: 'bg-green-100 text-green-700',
     lost: 'bg-gray-100 text-gray-500',
+    closed_lost: 'bg-gray-100 text-gray-500',
   };
   
+  const displayName = stage?.replace('closed_', '').replace('_', ' ');
+  
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full ${styles[stage] || styles.lead}`}>
-      {stage}
+    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${styles[stage] || styles.lead}`}>
+      {displayName || stage}
     </span>
   );
 }

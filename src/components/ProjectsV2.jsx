@@ -115,8 +115,8 @@ export function ProjectsV2({ onNavigate, initialProjectId }) {
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <p className="font-semibold text-gray-900">{project.name}</p>
-                    {project.client_name && (
-                      <p className="text-sm text-gray-500">{project.client_name}</p>
+                    {(project.client || project.client_name) && (
+                      <p className="text-sm text-gray-500">{project.client || project.client_name}</p>
                     )}
                   </div>
                   <StatusBadge status={project.status} />
@@ -200,8 +200,8 @@ function ProjectDetail({ project, onBack, onUpdate, onDelete, onNavigate }) {
         </button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-          {project.client_name && (
-            <p className="text-gray-500">{project.client_name}</p>
+          {(project.client || project.client_name) && (
+            <p className="text-gray-500">{project.client || project.client_name}</p>
           )}
         </div>
         <StatusBadge status={project.status} />
@@ -306,11 +306,11 @@ function OverviewTab({ project, editing, editData, setEditData, onEdit, onSave, 
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
           <input
             type="text"
-            value={editData.client_name ?? project.client_name ?? ''}
-            onChange={(e) => setEditData({ ...editData, client_name: e.target.value })}
+            value={editData.client ?? project.client ?? ''}
+            onChange={(e) => setEditData({ ...editData, client: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           />
         </div>
@@ -321,18 +321,21 @@ function OverviewTab({ project, editing, editData, setEditData, onEdit, onSave, 
             onChange={(e) => setEditData({ ...editData, status: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           >
+            <option value="active">Active</option>
             <option value="in_progress">In Progress</option>
-            <option value="review">Review</option>
-            <option value="complete">Complete</option>
+            <option value="completed">Completed</option>
+            <option value="on_hold">On Hold</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Phase</label>
           <input
-            type="number"
-            value={editData.budget ?? project.budget ?? ''}
-            onChange={(e) => setEditData({ ...editData, budget: parseFloat(e.target.value) || 0 })}
+            type="text"
+            value={editData.phase ?? project.phase ?? ''}
+            onChange={(e) => setEditData({ ...editData, phase: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            placeholder="e.g., Pre-production, Production, Post"
           />
         </div>
         <div>
@@ -384,10 +387,10 @@ function OverviewTab({ project, editing, editData, setEditData, onEdit, onSave, 
         </div>
         
         <dl className="space-y-3 text-sm">
-          {project.budget > 0 && (
+          {project.phase && (
             <div className="flex justify-between">
-              <dt className="text-gray-500">Budget</dt>
-              <dd className="font-medium">{formatCurrency(project.budget)}</dd>
+              <dt className="text-gray-500">Phase</dt>
+              <dd className="font-medium">{project.phase}</dd>
             </div>
           )}
           {project.deadline && (
@@ -402,10 +405,10 @@ function OverviewTab({ project, editing, editData, setEditData, onEdit, onSave, 
               <dd className="font-medium">{project.next_milestone}</dd>
             </div>
           )}
-          {project.client_email && (
+          {project.start_date && (
             <div className="flex justify-between">
-              <dt className="text-gray-500">Client Email</dt>
-              <dd className="font-medium">{project.client_email}</dd>
+              <dt className="text-gray-500">Start Date</dt>
+              <dd className="font-medium">{formatDate(project.start_date)}</dd>
             </div>
           )}
         </dl>
@@ -654,19 +657,25 @@ function TaskItem({ task, onToggle, onDelete }) {
 
 function StatusBadge({ status }) {
   const styles = {
+    active: 'bg-blue-100 text-blue-700',
     in_progress: 'bg-blue-100 text-blue-700',
-    review: 'bg-amber-100 text-amber-700',
+    completed: 'bg-green-100 text-green-700',
     complete: 'bg-green-100 text-green-700',
+    on_hold: 'bg-amber-100 text-amber-700',
+    cancelled: 'bg-gray-100 text-gray-500',
   };
   
   const labels = {
+    active: 'Active',
     in_progress: 'In Progress',
-    review: 'Review',
+    completed: 'Completed',
     complete: 'Complete',
+    on_hold: 'On Hold',
+    cancelled: 'Cancelled',
   };
   
   return (
-    <span className={`text-xs px-2 py-1 rounded-full font-medium ${styles[status] || styles.in_progress}`}>
+    <span className={`text-xs px-2 py-1 rounded-full font-medium ${styles[status] || styles.active}`}>
       {labels[status] || status}
     </span>
   );
@@ -675,8 +684,8 @@ function StatusBadge({ status }) {
 function NewProjectSheet({ isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
     name: '',
-    client_name: '',
-    budget: '',
+    client: '',
+    phase: '',
     deadline: '',
     notes: '',
   });
@@ -690,18 +699,18 @@ function NewProjectSheet({ isOpen, onClose, onSave }) {
     try {
       const result = await onSave({
         name: formData.name.trim(),
-        client_name: formData.client_name.trim() || null,
-        budget: parseFloat(formData.budget) || 0,
+        client: formData.client.trim() || null,
+        phase: formData.phase.trim() || null,
         deadline: formData.deadline || null,
         notes: formData.notes.trim() || null,
-        status: 'in_progress',
+        status: 'active',
       });
       
       if (result.error) {
         throw result.error;
       }
       
-      setFormData({ name: '', client_name: '', budget: '', deadline: '', notes: '' });
+      setFormData({ name: '', client: '', phase: '', deadline: '', notes: '' });
       onClose();
     } catch (err) {
       console.error('Failed to create project:', err);
@@ -730,12 +739,12 @@ function NewProjectSheet({ isOpen, onClose, onSave }) {
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Client Name
+            Client
           </label>
           <input
             type="text"
-            value={formData.client_name}
-            onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
+            value={formData.client}
+            onChange={(e) => setFormData({ ...formData, client: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             placeholder="e.g., Mark DiNatale"
           />
@@ -743,14 +752,14 @@ function NewProjectSheet({ isOpen, onClose, onSave }) {
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Budget
+            Phase
           </label>
           <input
-            type="number"
-            value={formData.budget}
-            onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+            type="text"
+            value={formData.phase}
+            onChange={(e) => setFormData({ ...formData, phase: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            placeholder="e.g., 40000"
+            placeholder="e.g., Pre-production"
           />
         </div>
         

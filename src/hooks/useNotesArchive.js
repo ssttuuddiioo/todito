@@ -13,7 +13,7 @@ export function useNotesArchive() {
     create,
     remove,
     refresh,
-  } = useSupabaseTable('toditox_notes_archive');
+  } = useSupabaseTable('notes_archive');
 
   // Add to archive
   const addNotesArchive = useCallback(async (archive) => {
@@ -47,7 +47,7 @@ export function useIgnoredItems() {
     create,
     remove,
     refresh,
-  } = useSupabaseTable('toditox_ignored_items');
+  } = useSupabaseTable('ignored_items');
 
   // Add ignored item
   const addIgnoredItem = useCallback(async (item) => {
