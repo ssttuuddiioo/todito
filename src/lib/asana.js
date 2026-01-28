@@ -129,3 +129,4 @@ export const ENERGY_DISPLAY = {
   admin: { label: '📋 Admin', color: 'text-gray-600' },
 };
 
+

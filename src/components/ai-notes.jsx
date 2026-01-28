@@ -3,8 +3,8 @@ import { parseNotesWithAI, parseNotesWithPatterns } from '@/lib/note-parser';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useOpportunities } from '@/hooks/useOpportunities';
-import { useCRM } from '@/hooks/useCRM';
-import { useMockData } from '@/contexts/MockDataContext';
+import { usePeople } from '@/hooks/usePeople';
+import { useNotesArchive, useIgnoredItems } from '@/hooks/useNotesArchive';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Sheet } from '@/components/ui/Sheet';
@@ -27,12 +27,12 @@ export function AINotes({ onNavigate }) {
   const [selectedTaskIndices, setSelectedTaskIndices] = useState(new Set());
   const [showAsanaExport, setShowAsanaExport] = useState(false);
 
-  const { addTask } = useTasks();
+  const { addTask, logTime } = useTasks();
   const { projects, addProject, updateProject } = useProjects();
   const { addOpportunity } = useOpportunities();
-  const { addContact } = useCRM();
-  const { logTime } = useTasks();
-  const { notesArchive, addNotesArchive, deleteNotesArchive, addIgnoredItem, ignoredItems } = useMockData();
+  const { addPerson: addContact } = usePeople();
+  const { notesArchive, addNotesArchive, deleteNotesArchive } = useNotesArchive();
+  const { ignoredItems, addIgnoredItem } = useIgnoredItems();
 
   const handleParse = async () => {
     if (!noteText.trim()) {

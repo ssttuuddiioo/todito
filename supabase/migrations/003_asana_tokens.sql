@@ -58,3 +58,4 @@ CREATE POLICY "Users can delete own asana connections"
   ON asana_connections FOR DELETE
   USING (auth.uid() = user_id);
 
+

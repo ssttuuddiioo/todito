@@ -1,42 +1,54 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { mockData } from '@/lib/mockData';
-
-// Global mock store to persist data during session
-const mockStore = { ...mockData };
+import { useEffect, useState, useCallback } from 'react';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 /**
- * Generic hook for Supabase CRUD operations with Demo Mode support
- * @param {string} table - Table name
+ * Generic hook for Supabase CRUD operations - Real Supabase only (no mock data)
+ * @param {string} table - Table name (e.g., 'toditox_transactions')
+ * @param {Object} options - Optional configuration
+ * @param {string} options.orderBy - Column to order by (default: 'created_at')
+ * @param {boolean} options.ascending - Sort ascending (default: false)
+ * @param {Object} options.filter - Initial filter object { column: value }
  * @returns {Object} Hook utilities and state
  */
-export function useSupabase(table) {
+export function useSupabaseTable(table, options = {}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const DEMO_MODE = true; // Should match App.jsx
+  
+  const { orderBy = 'created_at', ascending = false, filter = null } = options;
 
   // Fetch all records
-  const fetchData = async () => {
+  const fetchData = useCallback(async (customFilter = null) => {
+    if (!isSupabaseConfigured()) {
+      setError('Supabase not configured');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
-      if (DEMO_MODE) {
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 400));
-        const records = mockStore[table] || [];
-        // Sort by created_at desc
-        records.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        setData([...records]);
-        setLoading(false);
-        return;
-      }
-
-      const { data: records, error: fetchError } = await supabase
+      let query = supabase
         .from(table)
         .select('*')
-        .order('created_at', { ascending: false });
+        .order(orderBy, { ascending });
+
+      // Apply default filter
+      if (filter) {
+        Object.entries(filter).forEach(([column, value]) => {
+          query = query.eq(column, value);
+        });
+      }
+
+      // Apply custom filter
+      if (customFilter) {
+        Object.entries(customFilter).forEach(([column, value]) => {
+          query = query.eq(column, value);
+        });
+      }
+
+      const { data: records, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
 
@@ -47,33 +59,26 @@ export function useSupabase(table) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [table, orderBy, ascending, filter]);
 
   // Create a record
-  const create = async (record) => {
+  const create = useCallback(async (record) => {
+    if (!isSupabaseConfigured()) {
+      return { data: null, error: new Error('Supabase not configured') };
+    }
+
     try {
       setError(null);
 
-      if (DEMO_MODE) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const newRecord = {
-          id: crypto.randomUUID(),
-          ...record,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        // Initialize array if it doesn't exist
-        if (!mockStore[table]) mockStore[table] = [];
-        mockStore[table].unshift(newRecord);
-        
-        setData(prev => [newRecord, ...prev]);
-        return { data: newRecord, error: null };
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Not authenticated');
       }
 
       const { data: newRecord, error: createError } = await supabase
         .from(table)
-        .insert([record])
+        .insert([{ ...record, user_id: user.id }])
         .select()
         .single();
 
@@ -86,30 +91,16 @@ export function useSupabase(table) {
       setError(err.message);
       return { data: null, error: err };
     }
-  };
+  }, [table]);
 
   // Update a record
-  const update = async (id, updates) => {
+  const update = useCallback(async (id, updates) => {
+    if (!isSupabaseConfigured()) {
+      return { data: null, error: new Error('Supabase not configured') };
+    }
+
     try {
       setError(null);
-
-      if (DEMO_MODE) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const index = mockStore[table]?.findIndex(item => item.id === id);
-        
-        if (index !== -1) {
-          const updatedRecord = {
-            ...mockStore[table][index],
-            ...updates,
-            updated_at: new Date().toISOString()
-          };
-          mockStore[table][index] = updatedRecord;
-          
-          setData(prev => prev.map(item => item.id === id ? updatedRecord : item));
-          return { data: updatedRecord, error: null };
-        }
-        return { data: null, error: 'Record not found' };
-      }
 
       const { data: updatedRecord, error: updateError } = await supabase
         .from(table)
@@ -129,21 +120,16 @@ export function useSupabase(table) {
       setError(err.message);
       return { data: null, error: err };
     }
-  };
+  }, [table]);
 
   // Delete a record
-  const remove = async (id) => {
+  const remove = useCallback(async (id) => {
+    if (!isSupabaseConfigured()) {
+      return { error: new Error('Supabase not configured') };
+    }
+
     try {
       setError(null);
-
-      if (DEMO_MODE) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        if (mockStore[table]) {
-          mockStore[table] = mockStore[table].filter(item => item.id !== id);
-        }
-        setData(prev => prev.filter(item => item.id !== id));
-        return { error: null };
-      }
 
       const { error: deleteError } = await supabase
         .from(table)
@@ -159,13 +145,13 @@ export function useSupabase(table) {
       setError(err.message);
       return { error: err };
     }
-  };
+  }, [table]);
 
   // Subscribe to real-time updates
   useEffect(() => {
     fetchData();
 
-    if (DEMO_MODE) return; // No realtime in demo mode
+    if (!isSupabaseConfigured()) return;
 
     const subscription = supabase
       .channel(`${table}_changes`)
@@ -191,7 +177,7 @@ export function useSupabase(table) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [table]);
+  }, [table, fetchData]);
 
   return {
     data,
@@ -201,5 +187,6 @@ export function useSupabase(table) {
     update,
     remove,
     refresh: fetchData,
+    setData,
   };
 }

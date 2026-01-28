@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useMockData } from '@/contexts/MockDataContext';
+import { useIgnoredItems } from '@/hooks/useNotesArchive';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatDate } from '@/lib/utils';
 
 export function IgnoredTasks({ onNavigate }) {
-  const { ignoredItems, deleteIgnoredItem } = useMockData();
+  const { ignoredItems, deleteIgnoredItem } = useIgnoredItems();
   const [selectedItem, setSelectedItem] = useState(null);
 
   const handleDelete = (id) => {

@@ -1,36 +1,67 @@
-import { useMockData } from '@/contexts/MockDataContext';
+import { useMemo, useCallback } from 'react';
+import { useSupabaseTable } from './useSupabaseTable';
 
+/**
+ * Hook for managing projects
+ * Table: toditox_projects
+ */
 export function useProjects() {
-  const { projects, addProject, updateProject, deleteProject } = useMockData();
-  const loading = false;
+  const {
+    data: projects,
+    loading,
+    error,
+    create,
+    update,
+    remove,
+    refresh,
+  } = useSupabaseTable('toditox_projects');
 
-  const getActiveProjects = () => {
+  // Add a project
+  const addProject = useCallback(async (project) => {
+    return create(project);
+  }, [create]);
+
+  // Update a project
+  const updateProject = useCallback(async (id, updates) => {
+    return update(id, updates);
+  }, [update]);
+
+  // Delete a project
+  const deleteProject = useCallback(async (id) => {
+    return remove(id);
+  }, [remove]);
+
+  // Get active projects (not complete)
+  const getActiveProjects = useCallback(() => {
     return projects?.filter((proj) => proj.status !== 'complete') || [];
-  };
+  }, [projects]);
 
-  const getInProgressProjects = () => {
+  // Get in-progress projects only
+  const getInProgressProjects = useCallback(() => {
     return projects?.filter((proj) => proj.status === 'in_progress') || [];
-  };
+  }, [projects]);
 
-  const getProjectById = (id) => {
+  // Get project by ID
+  const getProjectById = useCallback((id) => {
     return projects?.find((proj) => proj.id === id);
-  };
+  }, [projects]);
 
-  const getTotalProjectValue = () => {
+  // Get total project value (budget)
+  const getTotalProjectValue = useCallback(() => {
     return projects
       ?.filter((proj) => proj.status !== 'complete')
-      .reduce((sum, proj) => sum + (proj.value || 0), 0) || 0;
-  };
+      .reduce((sum, proj) => sum + (parseFloat(proj.budget) || 0), 0) || 0;
+  }, [projects]);
 
-  // New helpers for milestones and timeline
-  const getUpcomingMilestones = (days = 7) => {
+  // Get upcoming milestones
+  const getUpcomingMilestones = useCallback((days = 7) => {
     const now = new Date();
     const futureDate = new Date();
     futureDate.setDate(now.getDate() + days);
     
     const milestones = [];
     projects?.forEach(project => {
-      if (project.milestones) {
+      if (project.milestones && Array.isArray(project.milestones)) {
         project.milestones.forEach(milestone => {
           if (!milestone.completed) {
             const milestoneDate = new Date(milestone.date);
@@ -39,7 +70,7 @@ export function useProjects() {
                 ...milestone,
                 project_id: project.id,
                 project_name: project.name,
-                project_client: project.client,
+                project_client: project.client_name || project.client,
               });
             }
           }
@@ -48,37 +79,56 @@ export function useProjects() {
     });
     
     return milestones.sort((a, b) => new Date(a.date) - new Date(b.date));
-  };
+  }, [projects]);
 
-  const getProjectsWithDeadlines = () => {
+  // Get projects with deadlines
+  const getProjectsWithDeadlines = useCallback(() => {
     return projects
       ?.filter(proj => proj.deadline && proj.status !== 'complete')
       .sort((a, b) => new Date(a.deadline) - new Date(b.deadline)) || [];
-  };
+  }, [projects]);
 
-  const getProjectsForTimeline = () => {
+  // Get projects for timeline view
+  const getProjectsForTimeline = useCallback(() => {
     return projects
       ?.filter(proj => proj.start_date && proj.deadline)
       .sort((a, b) => new Date(a.start_date) - new Date(b.start_date)) || [];
-  };
+  }, [projects]);
 
-  const getNextMilestone = (projectId) => {
+  // Get next milestone for a project
+  const getNextMilestone = useCallback((projectId) => {
     const project = getProjectById(projectId);
-    if (!project?.milestones) return null;
+    if (!project?.milestones || !Array.isArray(project.milestones)) return null;
     
     const upcoming = project.milestones
       .filter(m => !m.completed)
       .sort((a, b) => new Date(a.date) - new Date(b.date));
     
     return upcoming[0] || null;
-  };
+  }, [getProjectById]);
+
+  // Active projects
+  const activeProjects = useMemo(() => {
+    return projects?.filter((proj) => proj.status !== 'complete') || [];
+  }, [projects]);
+
+  // Completed projects
+  const completedProjects = useMemo(() => {
+    return projects?.filter((proj) => proj.status === 'complete') || [];
+  }, [projects]);
 
   return {
     projects,
     loading,
+    error,
+    
+    // Actions
     addProject,
     updateProject,
     deleteProject,
+    refresh,
+    
+    // Queries
     getActiveProjects,
     getInProgressProjects,
     getProjectById,
@@ -87,5 +137,9 @@ export function useProjects() {
     getProjectsWithDeadlines,
     getProjectsForTimeline,
     getNextMilestone,
+    
+    // Computed
+    activeProjects,
+    completedProjects,
   };
 }

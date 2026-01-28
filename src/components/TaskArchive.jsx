@@ -1,10 +1,11 @@
-import { useMockData } from '@/contexts/MockDataContext';
+import { useTasks } from '@/hooks/useTasks';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { formatDate } from '@/lib/utils';
 
 export function TaskArchive({ onNavigate }) {
-  const { archivedTasks } = useMockData();
+  // Archived tasks are completed tasks
+  const { doneTasks: archivedTasks } = useTasks();
 
   return (
     <div className="space-y-6 pb-20 animate-in fade-in duration-500">
@@ -100,5 +101,6 @@ export function TaskArchive({ onNavigate }) {
     </div>
   );
 }
+
 
 
