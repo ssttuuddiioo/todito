@@ -15,6 +15,7 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
     totalExpenses,
     loading,
     deleteTransaction,
+    updateTransaction,
   } = useTransactions();
   const { projects, getProjectById } = useProjects();
 
@@ -51,6 +52,11 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
     if (window.confirm('Delete this transaction?')) {
       await deleteTransaction(id);
     }
+  };
+
+  const handleToggleStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'paid' ? 'pending' : 'paid';
+    await updateTransaction(id, { status: newStatus });
   };
 
   if (loading) {
@@ -159,6 +165,7 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
                         transaction={transaction}
                         projectName={project?.name}
                         onDelete={() => handleDelete(transaction.id)}
+                        onToggleStatus={() => handleToggleStatus(transaction.id, transaction.status)}
                       />
                     );
                   })}
@@ -172,20 +179,23 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
   );
 }
 
-function TransactionCard({ transaction, projectName, onDelete }) {
+function TransactionCard({ transaction, projectName, onDelete, onToggleStatus }) {
   const [showActions, setShowActions] = useState(false);
   const isExpense = transaction.type === 'expense';
+  const isPending = transaction.status === 'pending';
   
   return (
     <Card 
-      className="p-3 hover:shadow-sm transition-shadow cursor-pointer"
+      className={`p-3 hover:shadow-sm transition-shadow cursor-pointer ${isPending ? 'border-l-4 border-l-amber-400' : ''}`}
       onClick={() => setShowActions(!showActions)}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${isExpense ? 'bg-red-500' : 'bg-green-500'}`} />
-            <p className="font-medium text-gray-900 truncate">{transaction.description}</p>
+            <p className={`font-medium truncate ${isPending ? 'text-gray-500' : 'text-gray-900'}`}>
+              {transaction.description}
+            </p>
           </div>
           <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
             <span>{formatDate(transaction.date)}</span>
@@ -201,20 +211,30 @@ function TransactionCard({ transaction, projectName, onDelete }) {
                 <span className="truncate">{projectName}</span>
               </>
             )}
-            {transaction.status === 'pending' && (
+            {isPending && (
               <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-medium">
-                Pending
+                Expected
               </span>
             )}
           </div>
         </div>
-        <p className={`font-bold text-lg ${isExpense ? 'text-red-600' : 'text-green-600'}`}>
+        <p className={`font-bold text-lg ${isPending ? 'opacity-60' : ''} ${isExpense ? 'text-red-600' : 'text-green-600'}`}>
           {isExpense ? '-' : '+'}{formatCurrency(transaction.amount)}
         </p>
       </div>
       
       {showActions && (
-        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end">
+        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between">
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleStatus(); }}
+            className={`text-sm font-medium ${
+              isPending 
+                ? 'text-green-600 hover:text-green-700' 
+                : 'text-amber-600 hover:text-amber-700'
+            }`}
+          >
+            {isPending ? 'Mark as Paid' : 'Mark as Pending'}
+          </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             className="text-sm text-red-600 hover:text-red-700 font-medium"
