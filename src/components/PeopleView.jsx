@@ -1,35 +1,38 @@
 import { useState, useMemo } from 'react';
 import { usePeople } from '@/hooks/usePeople';
+import { useOpportunities } from '@/hooks/useOpportunities';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
 import { formatDate } from '@/lib/utils';
 
 export function PeopleView({ onNavigate }) {
-  const [filter, setFilter] = useState('all'); // all, client, prospect, lead, partner
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [showNewPerson, setShowNewPerson] = useState(false);
   const [showLogContact, setShowLogContact] = useState(false);
-  
-  const { 
-    peopleWithLastContact, 
-    loading, 
-    addPerson, 
+  const [showCreateDeal, setShowCreateDeal] = useState(false);
+
+  const {
+    peopleWithLastContact,
+    loading,
+    addPerson,
     editPerson,
     deletePerson,
     logInteraction,
     getInteractionsForPerson,
   } = usePeople();
+  const { addOpportunity } = useOpportunities();
 
-  // Filter people
-  const filteredPeople = useMemo(() => {
-    if (filter === 'all') return peopleWithLastContact;
-    return peopleWithLastContact.filter(p => p.role === filter);
-  }, [peopleWithLastContact, filter]);
+  // Board columns
+  const COLUMNS = [
+    { id: 'lead', label: 'Leads', color: 'border-orange-400', bgHeader: 'bg-orange-50 text-orange-700', roles: ['lead'] },
+    { id: 'prospect', label: 'Prospects', color: 'border-yellow-400', bgHeader: 'bg-yellow-50 text-yellow-700', roles: ['prospect'] },
+    { id: 'client', label: 'Clients & Partners', color: 'border-blue-400', bgHeader: 'bg-blue-50 text-blue-700', roles: ['client', 'partner'] },
+  ];
 
-  // Sort by last contact (most recent first), then by name
-  const sortedPeople = useMemo(() => {
-    return [...filteredPeople].sort((a, b) => {
+  // Sort helper: last contact (most recent first), then name
+  const sortPeople = (list) => {
+    return [...list].sort((a, b) => {
       if (a.lastInteraction && b.lastInteraction) {
         return new Date(b.lastInteraction.date) - new Date(a.lastInteraction.date);
       }
@@ -37,10 +40,28 @@ export function PeopleView({ onNavigate }) {
       if (b.lastInteraction) return 1;
       return a.name.localeCompare(b.name);
     });
-  }, [filteredPeople]);
+  };
+
+  // Group people into columns
+  const columnData = useMemo(() => {
+    return COLUMNS.map(col => ({
+      ...col,
+      people: sortPeople(
+        peopleWithLastContact.filter(p => col.roles.includes(p.role || p.status || 'lead'))
+      ),
+    }));
+  }, [peopleWithLastContact]);
+
+  // Uncategorized (inactive, etc.)
+  const allKnownRoles = COLUMNS.flatMap(c => c.roles);
+  const uncategorized = useMemo(() => {
+    return sortPeople(
+      peopleWithLastContact.filter(p => !allKnownRoles.includes(p.role || p.status || 'lead'))
+    );
+  }, [peopleWithLastContact]);
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this person? Their interaction history will also be deleted.')) {
+    if (window.confirm('Delete this contact? Their interaction history will also be deleted.')) {
       await deletePerson(id);
       setSelectedPerson(null);
     }
@@ -58,79 +79,53 @@ export function PeopleView({ onNavigate }) {
     <div className="space-y-6 pb-24 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">People</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Contacts</h1>
         <Button onClick={() => setShowNewPerson(true)}>
-          + Add Person
+          + Add Contact
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
-        {[
-          { id: 'all', label: 'All' },
-          { id: 'client', label: 'Clients' },
-          { id: 'prospect', label: 'Prospects' },
-          { id: 'lead', label: 'Leads' },
-          { id: 'partner', label: 'Partners' },
-        ].map(f => (
-          <button
-            key={f.id}
-            onClick={() => setFilter(f.id)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-              filter === f.id 
-                ? 'bg-gray-900 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {f.label}
-          </button>
+      {/* 3-Column Board */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {columnData.map(col => (
+          <div key={col.id} className={`border-t-2 ${col.color} bg-gray-50/50 rounded-lg`}>
+            {/* Column Header */}
+            <div className={`px-3 py-2 rounded-t-lg ${col.bgHeader} flex items-center justify-between`}>
+              <span className="text-sm font-semibold">{col.label}</span>
+              <span className="text-xs font-medium opacity-70">{col.people.length}</span>
+            </div>
+
+            {/* Column Cards */}
+            <div className="p-2 space-y-2 min-h-[120px]">
+              {col.people.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-6">No {col.label.toLowerCase()}</p>
+              ) : (
+                col.people.map(person => (
+                  <ContactCard
+                    key={person.id}
+                    person={person}
+                    onClick={() => setSelectedPerson(person)}
+                  />
+                ))
+              )}
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* People List */}
-      {sortedPeople.length === 0 ? (
-        <Card className="p-8 text-center text-gray-400">
-          No {filter === 'all' ? 'people' : filter + 's'} added yet
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {sortedPeople.map(person => {
-            return (
-              <Card 
+      {/* Uncategorized / Inactive */}
+      {uncategorized.length > 0 && (
+        <div>
+          <h3 className="text-sm font-medium text-gray-400 mb-2">Other</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            {uncategorized.map(person => (
+              <ContactCard
                 key={person.id}
-                className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                person={person}
                 onClick={() => setSelectedPerson(person)}
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-900">{person.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <RoleBadge role={person.role || person.status} />
-                      {person.company && (
-                        <span className="text-xs text-gray-500">{person.company}</span>
-                      )}
-                    </div>
-                    {person.email && (
-                      <p className="text-sm text-gray-500 mt-1">{person.email}</p>
-                    )}
-                  </div>
-                  
-                  {person.lastInteraction && (
-                    <div className="text-right text-xs text-gray-400">
-                      <p>Last: {formatDate(person.lastInteraction.date)}</p>
-                      <p className="capitalize">{person.lastInteraction.type}</p>
-                    </div>
-                  )}
-                </div>
-                
-                {person.lastInteraction?.note && (
-                  <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                    "{person.lastInteraction.note}"
-                  </p>
-                )}
-              </Card>
-            );
-          })}
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -151,6 +146,7 @@ export function PeopleView({ onNavigate }) {
           onEdit={editPerson}
           onDelete={() => handleDelete(selectedPerson.id)}
           onLogContact={() => setShowLogContact(true)}
+          onCreateDeal={() => setShowCreateDeal(true)}
         />
       )}
 
@@ -163,7 +159,42 @@ export function PeopleView({ onNavigate }) {
           onSave={logInteraction}
         />
       )}
+
+      {/* Create Deal from Person Sheet */}
+      {selectedPerson && (
+        <CreateDealFromPersonSheet
+          isOpen={showCreateDeal}
+          onClose={() => setShowCreateDeal(false)}
+          person={selectedPerson}
+          onSave={addOpportunity}
+          onNavigate={onNavigate}
+        />
+      )}
     </div>
+  );
+}
+
+function ContactCard({ person, onClick }) {
+  return (
+    <Card
+      className="p-3 cursor-pointer hover:shadow-md transition-shadow"
+      onClick={onClick}
+    >
+      <p className="font-medium text-gray-900 text-sm leading-snug">{person.name}</p>
+      {person.company && (
+        <p className="text-xs text-gray-500 mt-0.5">{person.company}</p>
+      )}
+      {person.email && (
+        <p className="text-xs text-gray-400 mt-0.5 truncate">{person.email}</p>
+      )}
+      {person.lastInteraction && (
+        <div className="flex items-center gap-1.5 mt-2 text-[11px] text-gray-400">
+          <span className="capitalize">{person.lastInteraction.type}</span>
+          <span>·</span>
+          <span>{formatDate(person.lastInteraction.date)}</span>
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -304,7 +335,7 @@ function NewPersonSheet({ isOpen, onClose, onSave }) {
   );
 }
 
-function PersonDetailSheet({ isOpen, onClose, person, interactions, onEdit, onDelete, onLogContact }) {
+function PersonDetailSheet({ isOpen, onClose, person, interactions, onEdit, onDelete, onLogContact, onCreateDeal }) {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({});
 
@@ -441,12 +472,21 @@ function PersonDetailSheet({ isOpen, onClose, person, interactions, onEdit, onDe
               📞 Call
             </a>
           )}
-          <button 
+          <button
             onClick={onLogContact}
             className="flex-1 px-4 py-2 text-center text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600"
           >
             + Log Contact
           </button>
+          {(person.status === 'lead' || person.status === 'prospect' ||
+            person.role === 'lead' || person.role === 'prospect') && (
+            <button
+              onClick={onCreateDeal}
+              className="flex-1 px-4 py-2 text-center text-sm font-medium bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+            >
+              + Deal
+            </button>
+          )}
         </div>
 
         {/* Interaction History */}
@@ -561,6 +601,104 @@ function LogContactSheet({ isOpen, onClose, person, onSave }) {
         
         <Button type="submit" disabled={saving} className="w-full">
           {saving ? 'Saving...' : 'Save'}
+        </Button>
+      </form>
+    </Sheet>
+  );
+}
+
+function CreateDealFromPersonSheet({ isOpen, onClose, person, onSave, onNavigate }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    value: '',
+    next_action: '',
+    expected_close: '',
+    notes: '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.title.trim()) return;
+
+    setSaving(true);
+    try {
+      await onSave({
+        title: formData.title.trim(),
+        contact_id: person.id,
+        value: parseFloat(formData.value) || 0,
+        stage: 'lead',
+        next_action: formData.next_action,
+        expected_close: formData.expected_close || null,
+        notes: formData.notes,
+      });
+      setFormData({ title: '', value: '', next_action: '', expected_close: '', notes: '' });
+      onClose();
+      if (onNavigate) onNavigate('deals');
+    } catch (err) {
+      console.error('Failed to create deal:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Sheet isOpen={isOpen} onClose={onClose} title={`New Deal - ${person.name}`}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Deal Name *</label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            placeholder="e.g., Website redesign"
+            autoFocus
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={formData.value}
+            onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            placeholder="0.00"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Next Action</label>
+          <input
+            type="text"
+            value={formData.next_action}
+            onChange={(e) => setFormData({ ...formData, next_action: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            placeholder="e.g., Send proposal"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Expected Close</label>
+          <input
+            type="date"
+            value={formData.expected_close}
+            onChange={(e) => setFormData({ ...formData, expected_close: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+          <textarea
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            placeholder="Additional context..."
+          />
+        </div>
+        <Button type="submit" disabled={saving || !formData.title.trim()} className="w-full">
+          {saving ? 'Creating...' : 'Create Deal'}
         </Button>
       </form>
     </Sheet>

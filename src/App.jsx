@@ -8,6 +8,8 @@ import { PeopleView } from '@/components/PeopleView';
 import { AINotes } from '@/components/ai-notes';
 import { IgnoredTasks } from '@/components/IgnoredTasks';
 import { TaskArchive } from '@/components/TaskArchive';
+import { TasksView } from '@/components/TasksView';
+import { DealsView } from '@/components/DealsView';
 import { Navigation } from '@/components/Navigation';
 import { QuickActionFAB } from '@/components/QuickActionFAB';
 import { AddExpenseSheet } from '@/components/AddExpenseSheet';
@@ -17,8 +19,19 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState('dashboard');
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [showExpenseSheet, setShowExpenseSheet] = useState(false);
   const [showIncomeSheet, setShowIncomeSheet] = useState(false);
+
+  // Wrap navigation to clear project filter when leaving tasks
+  const handleNavigate = (view) => {
+    if (view !== 'tasks') {
+      setSelectedProjectId(null);
+      setSelectedCategory(null);
+    }
+    setCurrentView(view);
+  };
 
   // Check auth state on mount
   useEffect(() => {
@@ -99,37 +112,63 @@ export default function App() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <DashboardV2 onNavigate={setCurrentView} />;
+        return <DashboardV2 onNavigate={handleNavigate} />;
+      case 'tasks':
+        if (selectedProjectId) {
+          return (
+            <ProjectsV2
+              onNavigate={handleNavigate}
+              initialProjectId={selectedProjectId}
+              initialTab="tasks"
+              onBack={() => setSelectedProjectId(null)}
+            />
+          );
+        }
+        return <TasksView onNavigate={handleNavigate} selectedCategory={selectedCategory} onSelectCategory={(category) => { setSelectedCategory(category); setSelectedProjectId(null); }} onSelectProject={(projectId) => { setSelectedProjectId(projectId); setSelectedCategory(null); setCurrentView('tasks'); }} />;
       case 'projects':
-        return <ProjectsV2 onNavigate={setCurrentView} />;
+        return <ProjectsV2 onNavigate={handleNavigate} />;
       case 'money':
         return (
-          <MoneyView 
-            onNavigate={setCurrentView}
+          <MoneyView
+            onNavigate={handleNavigate}
             onOpenExpense={() => setShowExpenseSheet(true)}
             onOpenIncome={() => setShowIncomeSheet(true)}
           />
         );
+      case 'deals':
+        return <DealsView onNavigate={handleNavigate} />;
       case 'people':
-        return <PeopleView onNavigate={setCurrentView} />;
+        return <PeopleView onNavigate={handleNavigate} />;
       case 'ai-notes':
-        return <AINotes onNavigate={setCurrentView} />;
+        return <AINotes onNavigate={handleNavigate} />;
       case 'ignored-tasks':
-        return <IgnoredTasks onNavigate={setCurrentView} />;
+        return <IgnoredTasks onNavigate={handleNavigate} />;
       case 'task-archive':
-        return <TaskArchive onNavigate={setCurrentView} />;
+        return <TaskArchive onNavigate={handleNavigate} />;
       default:
-        return <DashboardV2 onNavigate={setCurrentView} />;
+        return <DashboardV2 onNavigate={handleNavigate} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation 
-        currentView={currentView} 
-        onNavigate={setCurrentView}
+      <Navigation
+        currentView={currentView}
+        onNavigate={handleNavigate}
         onLogout={handleLogout}
         user={user}
+        selectedProjectId={selectedProjectId}
+        selectedCategory={selectedCategory}
+        onSelectProject={(projectId) => {
+          setSelectedProjectId(projectId);
+          setSelectedCategory(null);
+          setCurrentView('tasks');
+        }}
+        onSelectCategory={(category) => {
+          setSelectedCategory(category);
+          setSelectedProjectId(null);
+          setCurrentView('tasks');
+        }}
       />
       
       {/* Main content area */}

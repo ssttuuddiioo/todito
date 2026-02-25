@@ -80,6 +80,21 @@ export function useTransactions() {
     return totalIncome - totalExpenses;
   }, [totalIncome, totalExpenses]);
 
+  // Tax reserve (25% of total income)
+  const taxReserve = useMemo(() => totalIncome * 0.25, [totalIncome]);
+
+  // Total pending expenses
+  const totalPendingExpenses = useMemo(() => {
+    return expenses
+      .filter(t => t.status === 'pending')
+      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+  }, [expenses]);
+
+  // Spendable cash (after tax reserve and pending bills)
+  const spendableCash = useMemo(() => {
+    return cashPosition - taxReserve - totalPendingExpenses;
+  }, [cashPosition, taxReserve, totalPendingExpenses]);
+
   // Get expenses by project
   const getExpensesByProject = useCallback((projectId) => {
     return expenses.filter(t => t.project_id === projectId);
@@ -142,13 +157,23 @@ export function useTransactions() {
       .sort((a, b) => new Date(a.date) - new Date(b.date));
   }, [pendingTransactions]);
 
+  // Auto-generated recurring transactions
+  const recurringTransactions = useMemo(() => {
+    return transactions.filter(t => t.recurring_template_id);
+  }, [transactions]);
+
+  // Get transactions linked to an invoice
+  const getTransactionsByInvoice = useCallback((invoiceId) => {
+    return transactions.filter(t => t.invoice_id === invoiceId);
+  }, [transactions]);
+
   return {
     transactions,
     expenses,
     income,
     loading,
     error,
-    
+
     // Actions
     addTransaction,
     addExpense,
@@ -156,20 +181,25 @@ export function useTransactions() {
     updateTransaction,
     deleteTransaction,
     refresh,
-    
+
     // Queries
     getTransactionsByProject,
     getExpensesByProject,
     getIncomeByProject,
     getProjectTotals,
-    
+    getTransactionsByInvoice,
+
     // Computed values
     totalExpenses,
     totalIncome,
     cashPosition,
+    taxReserve,
+    totalPendingExpenses,
+    spendableCash,
     transactionsByMonth,
     pendingTransactions,
     upcomingIncome,
     upcomingExpenses,
+    recurringTransactions,
   };
 }

@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useSupabaseTable } from './useSupabaseTable';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 /**
  * Hook for managing projects
@@ -14,6 +15,7 @@ export function useProjects() {
     update,
     remove,
     refresh,
+    setData,
   } = useSupabaseTable('projects');
 
   // Add a project
@@ -112,33 +114,52 @@ export function useProjects() {
     return upcoming[0] || null;
   }, [getProjectById]);
 
+  // Reorder projects by updating sort_order in batch
+  const reorderProjects = useCallback(async (orderedItems) => {
+    if (!isSupabaseConfigured()) return;
+    // Optimistic local update
+    setData(prev => {
+      const orderMap = new Map(orderedItems.map(i => [i.id, i.sort_order]));
+      return prev.map(p => orderMap.has(p.id) ? { ...p, sort_order: orderMap.get(p.id) } : p);
+    });
+    // Persist to DB
+    const promises = orderedItems.map(({ id, sort_order }) =>
+      supabase.from('projects').update({ sort_order }).eq('id', id)
+    );
+    await Promise.all(promises);
+  }, [setData]);
+
+  const sortByOrder = (list) =>
+    [...list].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0) || a.name.localeCompare(b.name));
+
   // Active projects (not complete/completed/cancelled)
   const activeProjects = useMemo(() => {
-    return projects?.filter((proj) => 
-      proj.status !== 'complete' && 
-      proj.status !== 'completed' && 
+    return sortByOrder(projects?.filter((proj) =>
+      proj.status !== 'complete' &&
+      proj.status !== 'completed' &&
       proj.status !== 'cancelled'
-    ) || [];
+    ) || []);
   }, [projects]);
 
   // Completed projects
   const completedProjects = useMemo(() => {
-    return projects?.filter((proj) => 
+    return sortByOrder(projects?.filter((proj) =>
       proj.status === 'complete' || proj.status === 'completed'
-    ) || [];
+    ) || []);
   }, [projects]);
 
   return {
     projects,
     loading,
     error,
-    
+
     // Actions
     addProject,
     updateProject,
     deleteProject,
+    reorderProjects,
     refresh,
-    
+
     // Queries
     getActiveProjects,
     getInProgressProjects,
@@ -148,7 +169,7 @@ export function useProjects() {
     getProjectsWithDeadlines,
     getProjectsForTimeline,
     getNextMilestone,
-    
+
     // Computed
     activeProjects,
     completedProjects,

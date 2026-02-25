@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { parseNotesWithAI, parseNotesWithPatterns } from '@/lib/note-parser';
+import { isStructuredFormat, parseStructuredNotes, normalizeWithLLM } from '@/lib/note-parser';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useOpportunities } from '@/hooks/useOpportunities';
@@ -22,6 +22,7 @@ export function AINotes({ onNavigate }) {
   const [showArchive, setShowArchive] = useState(false);
   const [selectedArchive, setSelectedArchive] = useState(null);
   const [taskModifications, setTaskModifications] = useState({}); // Track energy, pomodoro changes
+  const [parseMethod, setParseMethod] = useState(null); // 'structured' | 'freeform' | null
   
   // Multi-select for Asana export
   const [selectedTaskIndices, setSelectedTaskIndices] = useState(new Set());
@@ -45,11 +46,29 @@ export function AINotes({ onNavigate }) {
     setCreatedItems(new Set());
     setSessionIgnoredItems(new Set());
     setTaskModifications({});
+    setParseMethod(null);
 
     try {
-      const result = await parseNotesWithAI(noteText);
+      let result;
+
+      if (isStructuredFormat(noteText)) {
+        // Structured (Granola recipe) — deterministic, no AI call
+        result = parseStructuredNotes(noteText);
+        setParseMethod('structured');
+      } else {
+        // Freeform — normalize via LLM, then parse
+        const normalizedText = await normalizeWithLLM(noteText);
+
+        if (!normalizedText || normalizedText.includes('No tasks found.')) {
+          result = { tasks: [], projects: [], project_updates: [], opportunities: [], contacts: [], time_entries: [] };
+        } else {
+          result = parseStructuredNotes(normalizedText);
+        }
+        setParseMethod('freeform');
+      }
+
       setParsedData(result);
-      
+
       // Save to archive
       addNotesArchive({
         raw_text: noteText,
@@ -57,15 +76,9 @@ export function AINotes({ onNavigate }) {
         title: generateArchiveTitle(noteText),
       });
     } catch (err) {
-      console.warn('AI parsing failed, trying pattern matching:', err);
-      try {
-        const result = parseNotesWithPatterns(noteText);
-        setParsedData(result);
-        setError('AI parsing unavailable. Using basic pattern matching. Some items may not be extracted correctly.');
-      } catch (fallbackErr) {
-        setError(`Failed to parse notes: ${fallbackErr.message}`);
-        setParsedData(null);
-      }
+      console.error('Failed to parse notes:', err);
+      setError(`Failed to parse notes: ${err.message}`);
+      setParsedData(null);
     } finally {
       setIsParsing(false);
     }
@@ -79,6 +92,7 @@ export function AINotes({ onNavigate }) {
     setSessionIgnoredItems(new Set());
     setTaskModifications({});
     setSelectedTaskIndices(new Set());
+    setParseMethod(null);
   };
 
   // Multi-select helpers
@@ -262,6 +276,25 @@ export function AINotes({ onNavigate }) {
     }
   };
 
+  const buildProjectUpdates = (update, targetProject) => {
+    const updates = {};
+    if (update.status) updates.status = update.status;
+    if (update.deadline) updates.deadline = update.deadline;
+    if (update.next_milestone) updates.next_milestone = update.next_milestone;
+    if (update.notes) updates.notes = update.notes;
+    if (update.scope) updates.scope = update.scope;
+    if (update.milestones && update.milestones.length > 0) {
+      // Merge: append new milestones that don't already exist (by title)
+      const existing = targetProject.milestones || [];
+      const existingTitles = new Set(existing.map(m => m.title.toLowerCase()));
+      const newMilestones = update.milestones.filter(m => !existingTitles.has(m.title.toLowerCase()));
+      if (newMilestones.length > 0) {
+        updates.milestones = [...existing, ...newMilestones];
+      }
+    }
+    return updates;
+  };
+
   const handleUpdateProject = async (update, index) => {
     try {
       const matches = findMatchingProjects(update.project_name);
@@ -276,21 +309,13 @@ export function AINotes({ onNavigate }) {
         if (selected && !isNaN(selected)) {
           const idx = parseInt(selected) - 1;
           if (idx >= 0 && idx < matches.length) {
-            const updates = {};
-            if (update.status) updates.status = update.status;
-            if (update.deadline) updates.deadline = update.deadline;
-            if (update.next_milestone) updates.next_milestone = update.next_milestone;
-            if (update.notes) updates.notes = update.notes;
+            const updates = buildProjectUpdates(update, matches[idx]);
             await updateProject(matches[idx].id, updates);
             setCreatedItems(prev => new Set([...prev, `project-update-${index}`]));
           }
         }
       } else {
-        const updates = {};
-        if (update.status) updates.status = update.status;
-        if (update.deadline) updates.deadline = update.deadline;
-        if (update.next_milestone) updates.next_milestone = update.next_milestone;
-        if (update.notes) updates.notes = update.notes;
+        const updates = buildProjectUpdates(update, matches[0]);
         await updateProject(matches[0].id, updates);
         setCreatedItems(prev => new Set([...prev, `project-update-${index}`]));
       }
@@ -483,6 +508,16 @@ export function AINotes({ onNavigate }) {
                 {error}
               </div>
             )}
+            {parseMethod === 'structured' && !error && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                Structured notes detected — parsed without AI.
+              </div>
+            )}
+            {parseMethod === 'freeform' && !error && (
+              <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-800">
+                Freeform notes normalized via AI, then parsed.
+              </div>
+            )}
           </Card>
         </div>
 
@@ -622,6 +657,24 @@ export function AINotes({ onNavigate }) {
                           {update.next_milestone && `Milestone: ${update.next_milestone} • `}
                           {update.deadline && `Deadline: ${formatDate(update.deadline)}`}
                         </div>
+                        {update.scope && (
+                          <div className="text-sm text-gray-600 mt-1">
+                            <span className="font-medium text-gray-700">Scope:</span> {update.scope}
+                          </div>
+                        )}
+                        {update.milestones && update.milestones.length > 0 && (
+                          <div className="text-sm text-gray-600 mt-1">
+                            <span className="font-medium text-gray-700">Milestones:</span>
+                            <ul className="mt-0.5 space-y-0.5">
+                              {update.milestones.map((m, mi) => (
+                                <li key={mi} className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-400">{m.date}</span>
+                                  <span>{m.title}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </ExtractedItem>
                     );
@@ -862,13 +915,16 @@ function ExtractedItem({ children, isCreated, onCreate, onLater }) {
   );
 }
 
-// Energy types with labels
+// Category types (project-relevant)
 const ENERGY_TYPES = [
   { id: '', label: 'Uncategorized' },
-  { id: 'deep_focus', label: '🧠 Deep Focus', desc: 'Design, coding, building, developing, creating complex work' },
-  { id: 'communication', label: '💬 Communication', desc: 'Emails, calls, sending documents, coordinating with people' },
-  { id: 'planning', label: '📐 Planning', desc: 'Strategy, brainstorming, organizing, mapping out work' },
-  { id: 'admin', label: '📋 Admin', desc: 'Administrative tasks, tracking, documentation, invoicing' },
+  { id: 'vendor', label: 'Vendor' },
+  { id: 'design', label: 'Design' },
+  { id: 'coordination', label: 'Coordination' },
+  { id: 'procurement', label: 'Procurement' },
+  { id: 'onsite', label: 'On-site' },
+  { id: 'dev', label: 'Dev' },
+  { id: 'admin', label: 'Admin' },
 ];
 
 const PRIORITY_OPTIONS = [
@@ -880,6 +936,8 @@ const PRIORITY_OPTIONS = [
 
 function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect, onCreate, onLater, onUpdateField }) {
   const [showDetails, setShowDetails] = useState(false);
+  const [titleExpanded, setTitleExpanded] = useState(false);
+  const isTitleLong = task.title && task.title.length > 60;
   const currentEnergy = task.energy || '';
   const currentPriority = task.priority || '';
   const pomodoroCount = task.pomodoro_count || 0; // Start with 0
@@ -906,7 +964,29 @@ function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect,
             />
           )}
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-gray-900">{task.title}</div>
+            <div className="font-medium text-gray-900 flex items-center gap-2 flex-wrap">
+              <span>
+                {isTitleLong && !titleExpanded ? task.title.slice(0, 60) + '…' : task.title}
+                {isTitleLong && (
+                  <button
+                    onClick={() => setTitleExpanded(!titleExpanded)}
+                    className="text-xs text-primary-500 hover:text-primary-700 ml-1"
+                  >
+                    {titleExpanded ? 'less' : 'more'}
+                  </button>
+                )}
+              </span>
+              {task.waiting_on && task.waiting_on.length > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 shrink-0">
+                  Blocked
+                </span>
+              )}
+              {task.project_name && task.project_name.includes('Untagged') && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 shrink-0">
+                  Untagged
+                </span>
+              )}
+            </div>
             {task.subtitle && (
               <div className="text-xs text-gray-500 mt-0.5">{task.subtitle}</div>
             )}
@@ -1001,6 +1081,19 @@ function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect,
           <div className="text-xs text-gray-500 flex flex-wrap gap-x-2">
             {task.project_name && <span>📁 {task.project_name}</span>}
             {task.due_date && <span>📅 {task.due_date}</span>}
+          </div>
+        )}
+
+        {/* Waiting on metadata */}
+        {task.waiting_on && task.waiting_on.length > 0 && (
+          <div className="text-xs bg-amber-50 border border-amber-200 rounded-md px-3 py-2 space-y-1">
+            {task.waiting_on.map((wo, woIdx) => (
+              <div key={woIdx} className="text-amber-800">
+                <span className="font-medium">{wo.contact}</span>
+                {wo.description && <span> — {wo.description}</span>}
+                {wo.date_context && <span className="text-amber-600"> (mentioned {wo.date_context})</span>}
+              </div>
+            ))}
           </div>
         )}
 

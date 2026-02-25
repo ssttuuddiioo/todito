@@ -1,11 +1,8 @@
 import { useState } from 'react';
-
-// Simple hardcoded auth - credentials stored as hashes for basic obfuscation
-const VALID_USER = 'pablo';
-const VALID_PASS = 'todito';
+import { supabase } from '@/lib/supabase';
 
 export function Login({ onLoginSuccess }) {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -15,21 +12,24 @@ export function Login({ onLoginSuccess }) {
     setError(null);
     setIsLoading(true);
 
-    // Simulate slight delay for UX
-    await new Promise(r => setTimeout(r, 300));
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (username === VALID_USER && password === VALID_PASS) {
-      // Store session in localStorage
-      localStorage.setItem('todito_session', JSON.stringify({ 
-        user: username, 
-        timestamp: Date.now() 
-      }));
-      onLoginSuccess?.({ user: username });
-    } else {
-      setError('Invalid username or password');
+      if (authError) {
+        throw authError;
+      }
+
+      // Success - onLoginSuccess will be called by auth state listener in App.jsx
+      onLoginSuccess?.(data.user);
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.message || 'Failed to sign in');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
@@ -47,18 +47,18 @@ export function Login({ onLoginSuccess }) {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-1.5">
-              Username
+            <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
+              Email
             </label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-              placeholder="Enter username"
+              placeholder="pablo@studiostudio.nyc"
               required
-              autoComplete="username"
+              autoComplete="email"
               autoFocus
             />
           </div>
