@@ -17,18 +17,18 @@ export function Modal({ isOpen, onClose, title, children }) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+      <div
+        className="fixed inset-0 bg-scrim/50 transition-opacity"
         onClick={onClose}
       />
-      
+
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+        <div className="relative bg-surface-container-highest rounded-xl shadow-elevation-4 max-w-lg w-full p-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
+            <h3 className="text-headline-sm text-surface-on">{title}</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-surface-on-variant hover:text-surface-on transition-colors"
             >
               <svg
                 className="w-6 h-6"
@@ -45,13 +45,10 @@ export function Modal({ isOpen, onClose, title, children }) {
               </svg>
             </button>
           </div>
-          
+
           <div>{children}</div>
         </div>
       </div>
     </div>
   );
 }
-
-
-

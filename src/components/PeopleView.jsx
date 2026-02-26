@@ -25,9 +25,9 @@ export function PeopleView({ onNavigate }) {
 
   // Board columns
   const COLUMNS = [
-    { id: 'lead', label: 'Leads', color: 'border-orange-400', bgHeader: 'bg-orange-50 text-orange-700', roles: ['lead'] },
-    { id: 'prospect', label: 'Prospects', color: 'border-yellow-400', bgHeader: 'bg-yellow-50 text-yellow-700', roles: ['prospect'] },
-    { id: 'client', label: 'Clients & Partners', color: 'border-blue-400', bgHeader: 'bg-blue-50 text-blue-700', roles: ['client', 'partner'] },
+    { id: 'lead', label: 'Leads', color: 'border-orange-400', bgHeader: 'bg-orange-500/10 text-orange-400', roles: ['lead'] },
+    { id: 'prospect', label: 'Prospects', color: 'border-yellow-400', bgHeader: 'bg-yellow-500/10 text-yellow-400', roles: ['prospect'] },
+    { id: 'client', label: 'Clients & Partners', color: 'border-blue-400', bgHeader: 'bg-blue-500/10 text-blue-400', roles: ['client', 'partner'] },
   ];
 
   // Sort helper: last contact (most recent first), then name
@@ -70,7 +70,7 @@ export function PeopleView({ onNavigate }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -79,7 +79,7 @@ export function PeopleView({ onNavigate }) {
     <div className="space-y-6 pb-24 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Contacts</h1>
+        <h1 className="text-2xl font-bold text-surface-on">Contacts</h1>
         <Button onClick={() => setShowNewPerson(true)}>
           + Add Contact
         </Button>
@@ -88,9 +88,9 @@ export function PeopleView({ onNavigate }) {
       {/* 3-Column Board */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {columnData.map(col => (
-          <div key={col.id} className={`border-t-2 ${col.color} bg-gray-50/50 rounded-lg`}>
+          <div key={col.id} className={`border-t-2 ${col.color} bg-surface/50 rounded-md`}>
             {/* Column Header */}
-            <div className={`px-3 py-2 rounded-t-lg ${col.bgHeader} flex items-center justify-between`}>
+            <div className={`px-3 py-2 rounded-t-md ${col.bgHeader} flex items-center justify-between`}>
               <span className="text-sm font-semibold">{col.label}</span>
               <span className="text-xs font-medium opacity-70">{col.people.length}</span>
             </div>
@@ -98,7 +98,7 @@ export function PeopleView({ onNavigate }) {
             {/* Column Cards */}
             <div className="p-2 space-y-2 min-h-[120px]">
               {col.people.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-6">No {col.label.toLowerCase()}</p>
+                <p className="text-xs text-outline text-center py-6">No {col.label.toLowerCase()}</p>
               ) : (
                 col.people.map(person => (
                   <ContactCard
@@ -116,7 +116,7 @@ export function PeopleView({ onNavigate }) {
       {/* Uncategorized / Inactive */}
       {uncategorized.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-400 mb-2">Other</h3>
+          <h3 className="text-sm font-medium text-outline mb-2">Other</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {uncategorized.map(person => (
               <ContactCard
@@ -130,7 +130,7 @@ export function PeopleView({ onNavigate }) {
       )}
 
       {/* New Person Sheet */}
-      <NewPersonSheet 
+      <NewPersonSheet
         isOpen={showNewPerson}
         onClose={() => setShowNewPerson(false)}
         onSave={addPerson}
@@ -180,15 +180,15 @@ function ContactCard({ person, onClick }) {
       className="p-3 cursor-pointer hover:shadow-md transition-shadow"
       onClick={onClick}
     >
-      <p className="font-medium text-gray-900 text-sm leading-snug">{person.name}</p>
+      <p className="font-medium text-surface-on text-sm leading-snug">{person.name}</p>
       {person.company && (
-        <p className="text-xs text-gray-500 mt-0.5">{person.company}</p>
+        <p className="text-xs text-surface-on-variant mt-0.5">{person.company}</p>
       )}
       {person.email && (
-        <p className="text-xs text-gray-400 mt-0.5 truncate">{person.email}</p>
+        <p className="text-xs text-outline mt-0.5 truncate">{person.email}</p>
       )}
       {person.lastInteraction && (
-        <div className="flex items-center gap-1.5 mt-2 text-[11px] text-gray-400">
+        <div className="flex items-center gap-1.5 mt-2 text-[16px] text-outline">
           <span className="capitalize">{person.lastInteraction.type}</span>
           <span>·</span>
           <span>{formatDate(person.lastInteraction.date)}</span>
@@ -200,13 +200,13 @@ function ContactCard({ person, onClick }) {
 
 function RoleBadge({ role }) {
   const styles = {
-    client: 'bg-blue-100 text-blue-700',
-    prospect: 'bg-yellow-100 text-yellow-700',
-    lead: 'bg-orange-100 text-orange-700',
-    partner: 'bg-green-100 text-green-700',
-    inactive: 'bg-gray-100 text-gray-500',
+    client: 'bg-blue-500/15 text-blue-400',
+    prospect: 'bg-yellow-500/15 text-yellow-400',
+    lead: 'bg-orange-500/15 text-orange-400',
+    partner: 'bg-green-500/15 text-green-400',
+    inactive: 'bg-surface-container-high text-surface-on-variant',
   };
-  
+
   return (
     <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${styles[role] || styles.lead}`}>
       {role}
@@ -228,7 +228,7 @@ function NewPersonSheet({ isOpen, onClose, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
-    
+
     setSaving(true);
     try {
       const result = await onSave({
@@ -239,11 +239,11 @@ function NewPersonSheet({ isOpen, onClose, onSave }) {
         company: formData.company.trim() || null,
         notes: formData.notes.trim() || null,
       });
-      
+
       if (result.error) {
         throw result.error;
       }
-      
+
       setFormData({ name: '', email: '', phone: '', role: 'client', company: '', notes: '' });
       onClose();
     } catch (err) {
@@ -258,23 +258,23 @@ function NewPersonSheet({ isOpen, onClose, onSave }) {
     <Sheet isOpen={isOpen} onClose={onClose} title="Add Person">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Name *</label>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             placeholder="e.g., Mark DiNatale"
             required
           />
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Role</label>
           <select
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
           >
             <option value="client">Client</option>
             <option value="prospect">Prospect</option>
@@ -282,51 +282,51 @@ function NewPersonSheet({ isOpen, onClose, onSave }) {
             <option value="partner">Partner</option>
           </select>
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Company</label>
           <input
             type="text"
             value={formData.company}
             onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             placeholder="Company name"
           />
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Email</label>
           <input
             type="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             placeholder="email@example.com"
           />
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Phone</label>
           <input
             type="tel"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             placeholder="555-555-5555"
           />
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Notes</label>
           <textarea
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             placeholder="Additional notes..."
           />
         </div>
-        
+
         <Button type="submit" disabled={saving || !formData.name.trim()} className="w-full">
           {saving ? 'Adding...' : 'Add Person'}
         </Button>
@@ -350,20 +350,20 @@ function PersonDetailSheet({ isOpen, onClose, person, interactions, onEdit, onDe
       <Sheet isOpen={isOpen} onClose={() => { setEditing(false); onClose(); }} title="Edit Person">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Name</label>
             <input
               type="text"
               value={editData.name ?? person.name}
               onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Role</label>
             <select
               value={editData.role ?? person.role ?? person.status}
               onChange={(e) => setEditData({ ...editData, role: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             >
               <option value="client">Client</option>
               <option value="prospect">Prospect</option>
@@ -373,30 +373,30 @@ function PersonDetailSheet({ isOpen, onClose, person, interactions, onEdit, onDe
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Email</label>
             <input
               type="email"
               value={editData.email ?? person.email ?? ''}
               onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Phone</label>
             <input
               type="tel"
               value={editData.phone ?? person.phone ?? ''}
               onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Notes</label>
             <textarea
               value={editData.notes ?? person.notes ?? ''}
               onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             />
           </div>
           <div className="flex gap-3">
@@ -417,64 +417,64 @@ function PersonDetailSheet({ isOpen, onClose, person, interactions, onEdit, onDe
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <RoleBadge role={person.role || person.status} />
-            <button 
+            <button
               onClick={() => setEditing(true)}
-              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              className="text-sm text-primary hover:text-primary font-medium"
             >
               Edit
             </button>
           </div>
-          
+
           {person.company && (
-            <p className="text-sm text-gray-500">Company: {person.company}</p>
+            <p className="text-sm text-surface-on-variant">Company: {person.company}</p>
           )}
-          
+
           {person.email && (
-            <a 
+            <a
               href={`mailto:${person.email}`}
-              className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700"
+              className="flex items-center gap-2 text-sm text-primary hover:text-primary"
             >
               <span>📧</span>
               {person.email}
             </a>
           )}
-          
+
           {person.phone && (
-            <a 
+            <a
               href={`tel:${person.phone}`}
-              className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700"
+              className="flex items-center gap-2 text-sm text-primary hover:text-primary"
             >
               <span>📞</span>
               {person.phone}
             </a>
           )}
-          
+
           {person.notes && (
-            <p className="text-sm text-gray-600">{person.notes}</p>
+            <p className="text-sm text-surface-on-variant">{person.notes}</p>
           )}
         </div>
 
         {/* Quick Actions */}
         <div className="flex gap-2">
           {person.email && (
-            <a 
+            <a
               href={`mailto:${person.email}`}
-              className="flex-1 px-4 py-2 text-center text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-center text-sm font-medium bg-surface-container-high text-surface-on rounded-md hover:bg-surface-container-highest"
             >
               📧 Email
             </a>
           )}
           {person.phone && (
-            <a 
+            <a
               href={`tel:${person.phone}`}
-              className="flex-1 px-4 py-2 text-center text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-center text-sm font-medium bg-surface-container-high text-surface-on rounded-md hover:bg-surface-container-highest"
             >
               📞 Call
             </a>
           )}
           <button
             onClick={onLogContact}
-            className="flex-1 px-4 py-2 text-center text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+            className="flex-1 px-4 py-2 text-center text-sm font-medium bg-primary text-primary-on rounded-md hover:bg-primary"
           >
             + Log Contact
           </button>
@@ -482,7 +482,7 @@ function PersonDetailSheet({ isOpen, onClose, person, interactions, onEdit, onDe
             person.role === 'lead' || person.role === 'prospect') && (
             <button
               onClick={onCreateDeal}
-              className="flex-1 px-4 py-2 text-center text-sm font-medium bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+              className="flex-1 px-4 py-2 text-center text-sm font-medium bg-amber-500 text-white rounded-md hover:bg-amber-600"
             >
               + Deal
             </button>
@@ -491,26 +491,26 @@ function PersonDetailSheet({ isOpen, onClose, person, interactions, onEdit, onDe
 
         {/* Interaction History */}
         <div>
-          <h3 className="font-semibold text-gray-900 mb-3">Contact History</h3>
-          
+          <h3 className="font-semibold text-surface-on mb-3">Contact History</h3>
+
           {interactions.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-4">
+            <p className="text-sm text-outline text-center py-4">
               No interactions logged yet
             </p>
           ) : (
             <div className="space-y-3">
               {interactions.map(interaction => (
-                <div key={interaction.id} className="p-3 bg-gray-50 rounded-lg">
+                <div key={interaction.id} className="p-3 bg-surface rounded-md">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-gray-500 capitalize">
+                    <span className="text-xs font-medium text-surface-on-variant capitalize">
                       {interaction.type}
                     </span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-outline">
                       {formatDate(interaction.date)}
                     </span>
                   </div>
                   {interaction.note && (
-                    <p className="text-sm text-gray-700">{interaction.note}</p>
+                    <p className="text-sm text-surface-on">{interaction.note}</p>
                   )}
                 </div>
               ))}
@@ -519,10 +519,10 @@ function PersonDetailSheet({ isOpen, onClose, person, interactions, onEdit, onDe
         </div>
 
         {/* Danger Zone */}
-        <div className="pt-4 border-t border-gray-100">
+        <div className="pt-4 border-t border-outline-variant">
           <button
             onClick={onDelete}
-            className="text-sm text-red-600 hover:text-red-700 font-medium"
+            className="text-sm text-red-400 hover:text-red-300 font-medium"
           >
             Delete Person
           </button>
@@ -542,7 +542,7 @@ function LogContactSheet({ isOpen, onClose, person, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     setSaving(true);
     try {
       await onSave({
@@ -565,11 +565,11 @@ function LogContactSheet({ isOpen, onClose, person, onSave }) {
     <Sheet isOpen={isOpen} onClose={onClose} title={`Log Contact - ${person.name}`}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Type</label>
           <select
             value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
           >
             <option value="email">Email</option>
             <option value="call">Call</option>
@@ -577,28 +577,28 @@ function LogContactSheet({ isOpen, onClose, person, onSave }) {
             <option value="other">Other</option>
           </select>
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Date</label>
           <input
             type="date"
             value={formData.date}
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
           />
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Note</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Note</label>
           <textarea
             value={formData.note}
             onChange={(e) => setFormData({ ...formData, note: e.target.value })}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             placeholder="What did you discuss?"
           />
         </div>
-        
+
         <Button type="submit" disabled={saving} className="w-full">
           {saving ? 'Saving...' : 'Save'}
         </Button>
@@ -646,54 +646,54 @@ function CreateDealFromPersonSheet({ isOpen, onClose, person, onSave, onNavigate
     <Sheet isOpen={isOpen} onClose={onClose} title={`New Deal - ${person.name}`}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Deal Name *</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Deal Name *</label>
           <input
             type="text"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             placeholder="e.g., Website redesign"
             autoFocus
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Value</label>
           <input
             type="number"
             step="0.01"
             min="0"
             value={formData.value}
             onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             placeholder="0.00"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Next Action</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Next Action</label>
           <input
             type="text"
             value={formData.next_action}
             onChange={(e) => setFormData({ ...formData, next_action: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             placeholder="e.g., Send proposal"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Expected Close</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Expected Close</label>
           <input
             type="date"
             value={formData.expected_close}
             onChange={(e) => setFormData({ ...formData, expected_close: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Notes</label>
           <textarea
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             placeholder="Additional context..."
           />
         </div>

@@ -15,6 +15,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { CATEGORIES } from '@/lib/categories';
 
 const NAV_ITEMS = [
   {
@@ -44,8 +45,8 @@ const NAV_ITEMS = [
       </svg>
     )
   },
-  { 
-    id: 'people', 
+  {
+    id: 'people',
     label: 'Contacts',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,14 +85,6 @@ export function Navigation({ currentView, onNavigate, onLogout, user, selectedPr
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
-  // Category definitions in display order
-  const CATEGORIES = [
-    { id: 'active', label: 'Active', color: 'text-green-400', dot: 'bg-green-400' },
-    { id: 'engagement', label: 'Engagement', color: 'text-amber-400', dot: 'bg-amber-400' },
-    { id: 'opportunities', label: 'Opportunities', color: 'text-orange-400', dot: 'bg-orange-400' },
-    { id: 'sidequest', label: 'Sidequest', color: 'text-blue-400', dot: 'bg-blue-400' },
-  ];
-
   // Projects that have tasks, grouped by category — sorted by sort_order (from hook)
   const projectsWithTasks = activeProjects
     .filter(p => (tasks || []).some(t => t.project_id === p.id));
@@ -119,16 +112,16 @@ export function Navigation({ currentView, onNavigate, onLogout, user, selectedPr
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 bg-slate-900 text-gray-300 border-r border-slate-800 z-50">
+      <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 bg-surface-container-lowest text-surface-on-variant border-r border-outline-variant z-50">
         {/* Brand */}
         <button
           onClick={() => onNavigate('dashboard')}
-          className="flex items-center h-16 px-6 border-b border-slate-800 bg-slate-950 w-full cursor-pointer hover:bg-slate-900 transition-colors"
+          className="flex items-center h-16 px-6 border-b border-outline-variant bg-surface-container-lowest w-full cursor-pointer hover:bg-surface-container-low transition-colors"
         >
-          <div className="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center text-white font-bold mr-3">
+          <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-primary-on-container font-bold mr-3">
             T
           </div>
-          <span className="text-lg font-bold text-white tracking-tight">Toditox</span>
+          <span className="text-lg font-bold text-surface-on tracking-tight">Toditox</span>
         </button>
 
         {/* Nav Items */}
@@ -147,14 +140,14 @@ export function Navigation({ currentView, onNavigate, onLogout, user, selectedPr
                   }}
                   className={`w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${
                     currentView === item.id && !selectedProjectId && !selectedCategory
-                      ? 'bg-primary-600 text-white shadow-lg shadow-primary-900/20'
+                      ? 'bg-primary-container text-primary-on-container'
                       : currentView === item.id && (selectedProjectId || selectedCategory)
-                        ? 'bg-slate-800 text-white'
-                        : 'hover:bg-slate-800 hover:text-white'
+                        ? 'bg-surface-container-high text-surface-on'
+                        : 'hover:bg-surface-container-high hover:text-surface-on'
                   }`}
                 >
                   <span className={`mr-3 transition-colors ${
-                    currentView === item.id ? 'text-primary-200' : 'text-slate-400 group-hover:text-white'
+                    currentView === item.id ? 'text-primary-on-container' : 'text-surface-on-variant group-hover:text-surface-on'
                   }`}>
                     {item.icon}
                   </span>
@@ -164,7 +157,7 @@ export function Navigation({ currentView, onNavigate, onLogout, user, selectedPr
                   {item.id === 'tasks' && projectsWithTasks.length > 0 && (
                     <span
                       onClick={(e) => { e.stopPropagation(); setShowProjects(!showProjects); }}
-                      className="ml-1 p-0.5 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                      className="ml-1 p-0.5 rounded hover:bg-surface-container-highest text-surface-on-variant hover:text-surface-on transition-colors"
                     >
                       <svg
                         className={`w-3.5 h-3.5 transition-transform ${showProjects ? 'rotate-90' : ''}`}
@@ -178,17 +171,18 @@ export function Navigation({ currentView, onNavigate, onLogout, user, selectedPr
 
                 {/* Project sub-items grouped by category */}
                 {item.id === 'tasks' && showProjects && projectsByCategory.length > 0 && (
-                  <div className="ml-5 mt-1 border-l border-slate-700 pl-3 space-y-2">
+                  <div className="ml-5 mt-1 border-l border-outline-variant pl-3 space-y-2">
                     {projectsByCategory.map(cat => (
                       <div key={cat.id}>
                         <button
                           onClick={() => onSelectCategory?.(selectedCategory === cat.id ? null : cat.id)}
-                          className={`text-[10px] font-semibold uppercase tracking-wider px-2 pt-1 pb-0.5 rounded transition-colors w-full text-left ${
+                          className={`flex items-center gap-1.5 text-[15px] font-semibold uppercase tracking-wider px-2 pt-1 pb-0.5 rounded transition-colors w-full text-left ${
                             selectedCategory === cat.id
-                              ? `${cat.color} bg-slate-800`
-                              : `${cat.color} hover:bg-slate-800/50`
+                              ? 'text-surface-on bg-surface-container-high'
+                              : 'text-surface-on-variant hover:bg-surface-container-high/50'
                           }`}
                         >
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cat.dot}`} />
                           {cat.label}
                         </button>
                         <DndContext
@@ -221,22 +215,22 @@ export function Navigation({ currentView, onNavigate, onLogout, user, selectedPr
         </div>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950">
+        <div className="p-4 border-t border-outline-variant bg-surface-container-lowest">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-medium text-sm">
+            <div className="w-9 h-9 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center text-surface-on-variant font-medium text-sm">
               {displayUser?.email?.[0]?.toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
+              <p className="text-sm font-medium text-surface-on truncate">
                 {displayUser?.email?.split('@')[0]}
               </p>
-              <p className="text-xs text-slate-500 truncate">
+              <p className="text-xs text-outline truncate">
                 Pro Plan
               </p>
             </div>
-            <button 
+            <button
               onClick={() => window.confirm('Sign out?') && onLogout?.()}
-              className="text-slate-500 hover:text-white transition-colors"
+              className="text-outline hover:text-surface-on transition-colors"
               title="Sign out"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -248,30 +242,30 @@ export function Navigation({ currentView, onNavigate, onLogout, user, selectedPr
       </aside>
 
       {/* Mobile Top Bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-200 z-40 px-4 flex items-center justify-between">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-surface-container border-b border-outline-variant z-40 px-4 flex items-center justify-between">
         <button onClick={() => onNavigate('dashboard')} className="flex items-center cursor-pointer">
-          <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white font-bold mr-2">
+          <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-primary-on-container font-bold mr-2">
             T
           </div>
-          <span className="text-lg font-bold text-gray-900">Toditox</span>
+          <span className="text-lg font-bold text-surface-on">Toditox</span>
         </button>
         <div className="relative">
-          <button 
+          <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"
+            className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-surface-on-variant"
           >
             {displayUser?.email?.[0]?.toUpperCase()}
           </button>
-          
+
           {showUserMenu && (
             <>
-              <div 
-                className="fixed inset-0 z-40" 
-                onClick={() => setShowUserMenu(false)} 
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowUserMenu(false)}
               />
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-1">
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-surface-container-high rounded-md shadow-elevation-2 border border-outline-variant z-50 py-1">
+                <div className="px-4 py-2 border-b border-outline-variant">
+                  <p className="text-sm font-medium text-surface-on truncate">
                     {displayUser?.email}
                   </p>
                 </div>
@@ -280,7 +274,7 @@ export function Navigation({ currentView, onNavigate, onLogout, user, selectedPr
                     setShowUserMenu(false);
                     if (window.confirm('Sign out?')) onLogout?.();
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
+                  className="w-full px-4 py-2 text-left text-sm text-error hover:bg-surface-container-highest"
                 >
                   Sign out
                 </button>
@@ -291,7 +285,7 @@ export function Navigation({ currentView, onNavigate, onLogout, user, selectedPr
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 safe-area-inset-bottom">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container border-t border-outline-variant z-40 safe-area-inset-bottom">
         <div className="flex justify-around items-center h-16 px-2">
           {NAV_ITEMS.map((item) => (
             <button
@@ -299,12 +293,12 @@ export function Navigation({ currentView, onNavigate, onLogout, user, selectedPr
               onClick={() => onNavigate(item.id)}
               className={`flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-colors ${
                 currentView === item.id
-                  ? 'text-primary-600'
-                  : 'text-gray-400 hover:text-gray-600'
+                  ? 'text-primary'
+                  : 'text-surface-on-variant hover:text-surface-on'
               }`}
             >
               <span className="transform scale-90">{item.icon}</span>
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[15px] font-medium">{item.label}</span>
             </button>
           ))}
         </div>
@@ -338,14 +332,14 @@ function SortableProjectItem({ project, isActive, taskCount, catDot, onSelect })
       onClick={onSelect}
       className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium transition-colors cursor-grab active:cursor-grabbing select-none ${
         isActive
-          ? 'bg-primary-600/80 text-white'
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+          ? 'bg-primary-container/80 text-primary-on-container'
+          : 'text-surface-on-variant hover:bg-surface-container-high hover:text-surface-on'
       }`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive ? 'bg-primary-300' : catDot}`} />
+      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive ? 'bg-primary' : catDot}`} />
       <span className="flex-1 text-left truncate">{project.name}</span>
       {taskCount > 0 && (
-        <span className={`text-[10px] ${isActive ? 'text-primary-200' : 'text-slate-500'}`}>
+        <span className={`text-[15px] ${isActive ? 'text-primary' : 'text-outline'}`}>
           {taskCount}
         </span>
       )}

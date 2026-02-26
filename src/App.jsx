@@ -69,12 +69,12 @@ export default function App() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg shadow-primary-500/30 mb-4 animate-pulse">
-            <span className="text-3xl font-bold text-white">T</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-container rounded-xl mb-4 animate-pulse">
+            <span className="text-3xl font-bold text-primary-on-container">T</span>
           </div>
-          <p className="text-slate-400">Loading...</p>
+          <p className="text-surface-on-variant">Loading...</p>
         </div>
       </div>
     );
@@ -88,18 +88,18 @@ export default function App() {
   // Not configured - show setup message
   if (!isSupabaseConfigured()) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-surface flex items-center justify-center p-4">
         <div className="max-w-md text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg shadow-primary-500/30 mb-6">
-            <span className="text-3xl font-bold text-white">T</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-container rounded-xl mb-6">
+            <span className="text-3xl font-bold text-primary-on-container">T</span>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-4">Toditox</h1>
-          <p className="text-slate-400 mb-6">
+          <h1 className="text-2xl font-bold text-surface-on mb-4">Toditox</h1>
+          <p className="text-surface-on-variant mb-6">
             Supabase is not configured. Please add your Supabase credentials to the environment variables.
           </p>
-          <div className="bg-slate-800 rounded-lg p-4 text-left text-sm">
-            <p className="text-slate-300 font-mono mb-2">Required variables:</p>
-            <code className="text-primary-400">
+          <div className="bg-surface-container-high rounded-md p-4 text-left text-sm">
+            <p className="text-surface-on-variant font-mono mb-2">Required variables:</p>
+            <code className="text-primary">
               VITE_SUPABASE_URL<br />
               VITE_SUPABASE_ANON_KEY
             </code>
@@ -151,7 +151,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface">
       <Navigation
         currentView={currentView}
         onNavigate={handleNavigate}
@@ -170,7 +170,7 @@ export default function App() {
           setCurrentView('tasks');
         }}
       />
-      
+
       {/* Main content area */}
       <div className="md:pl-64 transition-all duration-200" id="main-content">
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-8">
@@ -182,11 +182,11 @@ export default function App() {
       <QuickActionFAB />
 
       {/* Sheets triggered from MoneyView */}
-      <AddExpenseSheet 
+      <AddExpenseSheet
         isOpen={showExpenseSheet}
         onClose={() => setShowExpenseSheet(false)}
       />
-      <AddIncomeSheet 
+      <AddIncomeSheet
         isOpen={showIncomeSheet}
         onClose={() => setShowIncomeSheet(false)}
       />

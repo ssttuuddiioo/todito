@@ -57,17 +57,17 @@ export function QuickActionFAB() {
         {/* Action Menu */}
         {isOpen && (
           <div className="absolute bottom-16 right-0 mb-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
-            <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden min-w-[160px]">
+            <div className="bg-surface-container-high rounded-md shadow-elevation-2 border border-outline-variant overflow-hidden min-w-[160px]">
               {actions.map((action, index) => (
                 <button
                   key={action.id}
                   onClick={() => handleAction(action.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                    index !== actions.length - 1 ? 'border-b border-gray-100' : ''
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-surface-container-highest transition-colors ${
+                    index !== actions.length - 1 ? 'border-b border-outline-variant' : ''
                   }`}
                 >
                   <span className="text-xl">{action.icon}</span>
-                  <span className="text-sm font-medium text-gray-700">{action.label}</span>
+                  <span className="text-sm font-medium text-surface-on">{action.label}</span>
                 </button>
               ))}
             </div>
@@ -77,17 +77,17 @@ export function QuickActionFAB() {
         {/* FAB Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
-            isOpen 
-              ? 'bg-gray-900 rotate-45' 
-              : 'bg-primary-500 hover:bg-primary-600 hover:scale-105'
+          className={`w-14 h-14 rounded-lg shadow-elevation-3 flex items-center justify-center transition-all duration-200 ${
+            isOpen
+              ? 'bg-surface-container-highest rotate-45'
+              : 'bg-primary-container hover:opacity-90 hover:scale-105'
           }`}
           aria-label={isOpen ? 'Close menu' : 'Quick actions'}
         >
-          <svg 
-            className="w-6 h-6 text-white transition-transform duration-200" 
-            fill="none" 
-            viewBox="0 0 24 24" 
+          <svg
+            className={`w-6 h-6 transition-transform duration-200 ${isOpen ? 'text-surface-on' : 'text-primary-on-container'}`}
+            fill="none"
+            viewBox="0 0 24 24"
             stroke="currentColor"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -97,22 +97,22 @@ export function QuickActionFAB() {
 
       {/* Backdrop when menu is open */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/20 z-40 md:hidden"
+        <div
+          className="fixed inset-0 bg-scrim/20 z-40 md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sheets */}
-      <AddExpenseSheet 
+      <AddExpenseSheet
         isOpen={activeSheet === 'expense'}
         onClose={() => setActiveSheet(null)}
       />
-      <AddIncomeSheet 
+      <AddIncomeSheet
         isOpen={activeSheet === 'income'}
         onClose={() => setActiveSheet(null)}
       />
-      <AddTaskSheet 
+      <AddTaskSheet
         isOpen={activeSheet === 'task'}
         onClose={() => setActiveSheet(null)}
       />

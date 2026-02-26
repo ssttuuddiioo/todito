@@ -82,7 +82,7 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -91,7 +91,7 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
     <div className="space-y-6 pb-24 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Finance</h1>
+        <h1 className="text-2xl font-bold text-surface-on">Finance</h1>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={onOpenExpense}>
             + Expense
@@ -104,35 +104,35 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
 
       {/* Summary Cards */}
       <div className="space-y-3">
-        <Card className="p-5 text-center bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-          <p className="text-xs text-slate-400 uppercase tracking-wide">Spendable Cash</p>
+        <Card className="p-5 text-center bg-surface-container-lowest text-white">
+          <p className="text-xs text-surface-on-variant uppercase tracking-wide">Spendable Cash</p>
           <p className="text-3xl font-bold mt-1">{formatCurrency(spendableCash)}</p>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-surface-on-variant mt-1">
             After {formatCurrency(taxReserve)} tax reserve & {formatCurrency(totalPendingExpenses)} pending bills
           </p>
         </Card>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Card className="p-3 text-center">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Cash Position</p>
+            <p className="text-xs text-surface-on-variant uppercase tracking-wide">Cash Position</p>
             <p className="text-lg font-bold mt-1">{formatCurrency(cashPosition)}</p>
           </Card>
           <Card className="p-3 text-center">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Tax Reserve (25%)</p>
+            <p className="text-xs text-surface-on-variant uppercase tracking-wide">Tax Reserve (25%)</p>
             <p className="text-lg font-bold text-amber-600 mt-1">{formatCurrency(taxReserve)}</p>
           </Card>
           <Card className="p-3 text-center">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Total In</p>
+            <p className="text-xs text-surface-on-variant uppercase tracking-wide">Total In</p>
             <p className="text-lg font-bold text-green-600 mt-1">{formatCurrency(totalIncome)}</p>
           </Card>
           <Card className="p-3 text-center">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Total Out</p>
+            <p className="text-xs text-surface-on-variant uppercase tracking-wide">Total Out</p>
             <p className="text-lg font-bold text-red-600 mt-1">{formatCurrency(totalExpenses)}</p>
           </Card>
         </div>
       </div>
 
       {/* Tab Bar */}
-      <div className="flex gap-2 border-b border-gray-200 pb-0">
+      <div className="flex gap-2 border-b border-outline-variant pb-0">
         {[
           { id: 'transactions', label: 'Transactions' },
           { id: 'recurring', label: `Recurring${recurring.activeTemplates.length ? ` (${recurring.activeTemplates.length})` : ''}` },
@@ -143,8 +143,8 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
               activeTab === tab.id
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
+                ? 'border-surface-on text-surface-on'
+                : 'border-transparent text-outline hover:text-surface-on-variant'
             }`}
           >
             {tab.label}
@@ -165,10 +165,10 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
               <button
                 key={f.id}
                 onClick={() => setFilter(f.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   filter === f.id
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-surface-on text-surface'
+                    : 'bg-surface-container-high text-surface-on-variant hover:bg-surface-container-highest'
                 }`}
               >
                 {f.label}
@@ -178,7 +178,7 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
 
           {/* Transactions List */}
           {sortedMonths.length === 0 ? (
-            <Card className="p-8 text-center text-gray-400">
+            <Card className="p-8 text-center text-outline">
               No transactions recorded
             </Card>
           ) : (
@@ -201,8 +201,8 @@ export function MoneyView({ onNavigate, onOpenExpense, onOpenIncome }) {
                 return (
                   <div key={month}>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-bold text-gray-900">{monthLabel}</h3>
-                      <div className="text-sm text-gray-500">
+                      <h3 className="font-bold text-surface-on">{monthLabel}</h3>
+                      <div className="text-sm text-surface-on-variant">
                         <span className="text-green-600">+{formatCurrency(monthIncome)}</span>
                         {' / '}
                         <span className="text-red-600">-{formatCurrency(monthExpenses)}</span>
@@ -257,21 +257,21 @@ function TransactionCard({ transaction, projectName, onDelete, onToggleStatus })
   const [showActions, setShowActions] = useState(false);
   const isExpense = transaction.type === 'expense';
   const isPending = transaction.status === 'pending';
-  
+
   return (
-    <Card 
-      className={`p-3 hover:shadow-sm transition-shadow cursor-pointer ${isPending ? 'border-l-4 border-l-amber-400' : ''}`}
+    <Card
+      className={`p-3 hover:shadow-glow-primary transition-shadow cursor-pointer ${isPending ? 'bg-amber-950/40 border border-amber-800/20' : ''}`}
       onClick={() => setShowActions(!showActions)}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${isExpense ? 'bg-red-500' : 'bg-green-500'}`} />
-            <p className={`font-medium truncate ${isPending ? 'text-gray-500' : 'text-gray-900'}`}>
+            <p className={`font-medium truncate ${isPending ? 'text-surface-on-variant' : 'text-surface-on'}`}>
               {transaction.description}
             </p>
           </div>
-          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+          <div className="flex items-center gap-2 mt-1 text-xs text-surface-on-variant">
             <span>{formatDate(transaction.date)}</span>
             {transaction.category && (
               <>
@@ -286,7 +286,7 @@ function TransactionCard({ transaction, projectName, onDelete, onToggleStatus })
               </>
             )}
             {isPending && (
-              <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-medium">
+              <span className="px-1.5 py-0.5 bg-amber-500/15 text-amber-400 rounded text-xs font-medium">
                 Expected
               </span>
             )}
@@ -296,22 +296,22 @@ function TransactionCard({ transaction, projectName, onDelete, onToggleStatus })
           {isExpense ? '-' : '+'}{formatCurrency(transaction.amount)}
         </p>
       </div>
-      
+
       {showActions && (
-        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between">
+        <div className="mt-3 pt-3 border-t border-outline-variant flex justify-between">
           <button
             onClick={(e) => { e.stopPropagation(); onToggleStatus(); }}
             className={`text-sm font-medium ${
-              isPending 
-                ? 'text-green-600 hover:text-green-700' 
-                : 'text-amber-600 hover:text-amber-700'
+              isPending
+                ? 'text-green-600 hover:text-green-400'
+                : 'text-amber-600 hover:text-amber-400'
             }`}
           >
             {isPending ? 'Mark as Paid' : 'Mark as Pending'}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="text-sm text-red-600 hover:text-red-700 font-medium"
+            className="text-sm text-red-600 hover:text-red-400 font-medium"
           >
             Delete
           </button>
@@ -394,18 +394,18 @@ function RecurringTab({ recurring, projects, getProjectById }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-500">{recurring.activeTemplates.length} active templates</p>
+        <p className="text-sm text-surface-on-variant">{recurring.activeTemplates.length} active templates</p>
         <div className="flex gap-2">
           <button
             onClick={() => setShowPaste(true)}
-            className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200"
+            className="px-3 py-2 bg-surface-container-high text-surface-on-variant rounded-md text-sm font-medium hover:bg-surface-container-highest"
             title="Paste from spreadsheet"
           >
             Paste
           </button>
           <button
             onClick={() => { resetForm(); setShowNew(true); }}
-            className="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600"
+            className="px-4 py-2 bg-primary text-primary-on rounded-md text-sm font-medium hover:bg-primary-600"
           >
             + New Recurring
           </button>
@@ -413,7 +413,7 @@ function RecurringTab({ recurring, projects, getProjectById }) {
       </div>
 
       {recurring.templates.length === 0 ? (
-        <Card className="p-8 text-center text-gray-400">
+        <Card className="p-8 text-center text-outline">
           No recurring transactions set up
         </Card>
       ) : (
@@ -424,16 +424,16 @@ function RecurringTab({ recurring, projects, getProjectById }) {
             return (
               <Card
                 key={template.id}
-                className={`p-3 cursor-pointer hover:shadow-sm transition-shadow ${!template.is_active ? 'opacity-50' : ''}`}
+                className={`p-3 cursor-pointer hover:shadow-elevation-1 transition-shadow ${!template.is_active ? 'opacity-50' : ''}`}
                 onClick={() => handleEdit(template)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${isExpense ? 'bg-red-500' : 'bg-green-500'}`} />
-                      <p className="font-medium text-gray-900 truncate">{template.description}</p>
+                      <p className="font-medium text-surface-on truncate">{template.description}</p>
                     </div>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 mt-1 text-xs text-surface-on-variant">
                       <span className="capitalize">{FREQUENCY_LABELS[template.frequency]}</span>
                       <span>•</span>
                       <span>Next: {formatDate(template.next_occurrence)}</span>
@@ -451,9 +451,9 @@ function RecurringTab({ recurring, projects, getProjectById }) {
                     </p>
                     <button
                       onClick={(e) => { e.stopPropagation(); recurring.toggleActive(template.id, template.is_active); }}
-                      className={`w-8 h-5 rounded-full transition-colors ${template.is_active ? 'bg-green-500' : 'bg-gray-300'}`}
+                      className={`w-8 h-5 rounded-full transition-colors ${template.is_active ? 'bg-green-500' : 'bg-outline'}`}
                     >
-                      <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform ${template.is_active ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+                      <div className={`w-3.5 h-3.5 rounded-full bg-surface-container transition-transform ${template.is_active ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
                     </button>
                   </div>
                 </div>
@@ -499,35 +499,35 @@ function RecurringTab({ recurring, projects, getProjectById }) {
       <Sheet isOpen={showNew} onClose={() => { setShowNew(false); resetForm(); }} title={editingId ? 'Edit Recurring' : 'New Recurring'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Description *</label>
             <input
               type="text"
               value={formData.description}
               onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
               placeholder="e.g., Adobe Creative Cloud"
               autoFocus
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+              <label className="block text-sm font-medium text-surface-on mb-1">Amount *</label>
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={formData.amount}
                 onChange={(e) => setFormData(p => ({ ...p, amount: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
                 placeholder="0.00"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <label className="block text-sm font-medium text-surface-on mb-1">Type</label>
               <select
                 value={formData.type}
                 onChange={(e) => setFormData(p => ({ ...p, type: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
               >
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
@@ -536,11 +536,11 @@ function RecurringTab({ recurring, projects, getProjectById }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Frequency *</label>
+              <label className="block text-sm font-medium text-surface-on mb-1">Frequency *</label>
               <select
                 value={formData.frequency}
                 onChange={(e) => setFormData(p => ({ ...p, frequency: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
               >
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
@@ -549,21 +549,21 @@ function RecurringTab({ recurring, projects, getProjectById }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Next Date *</label>
+              <label className="block text-sm font-medium text-surface-on mb-1">Next Date *</label>
               <input
                 type="date"
                 value={formData.next_occurrence}
                 onChange={(e) => setFormData(p => ({ ...p, next_occurrence: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Project</label>
             <select
               value={formData.project_id}
               onChange={(e) => setFormData(p => ({ ...p, project_id: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             >
               <option value="">None</option>
               {projects?.map(p => (
@@ -572,18 +572,18 @@ function RecurringTab({ recurring, projects, getProjectById }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date (optional)</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">End Date (optional)</label>
             <input
               type="date"
               value={formData.end_date}
               onChange={(e) => setFormData(p => ({ ...p, end_date: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             />
           </div>
           <button
             type="submit"
             disabled={!formData.description.trim() || !formData.amount || !formData.next_occurrence}
-            className="w-full py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 bg-primary text-primary-on rounded-md font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {editingId ? 'Update' : 'Create'}
           </button>
@@ -591,7 +591,7 @@ function RecurringTab({ recurring, projects, getProjectById }) {
             <button
               type="button"
               onClick={() => { handleDelete(editingId); setShowNew(false); resetForm(); }}
-              className="w-full py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium"
+              className="w-full py-2 text-red-600 hover:bg-red-500/15 rounded-md text-sm font-medium"
             >
               Delete Template
             </button>
@@ -607,10 +607,10 @@ function RecurringTab({ recurring, projects, getProjectById }) {
 // ==========================================
 
 const INVOICE_STATUS_STYLES = {
-  draft: 'bg-gray-100 text-gray-600',
-  sent: 'bg-blue-100 text-blue-700',
-  paid: 'bg-green-100 text-green-700',
-  overdue: 'bg-red-100 text-red-700',
+  draft: 'bg-surface-container-high text-surface-on-variant',
+  sent: 'bg-blue-500/15 text-blue-400',
+  paid: 'bg-green-500/15 text-green-400',
+  overdue: 'bg-red-500/15 text-red-400',
 };
 
 function InvoicesTab({ invoices, projects, people, getProjectById, addTransaction }) {
@@ -693,11 +693,11 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
         <Card className="p-4 border-l-4 border-l-amber-400">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm text-gray-500">Outstanding</p>
-              <p className="text-xl font-bold text-gray-900">{formatCurrency(invoices.totalOutstanding)}</p>
+              <p className="text-sm text-surface-on-variant">Outstanding</p>
+              <p className="text-xl font-bold text-surface-on">{formatCurrency(invoices.totalOutstanding)}</p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">{invoices.outstandingInvoices.length} invoice{invoices.outstandingInvoices.length !== 1 ? 's' : ''}</p>
+              <p className="text-sm text-surface-on-variant">{invoices.outstandingInvoices.length} invoice{invoices.outstandingInvoices.length !== 1 ? 's' : ''}</p>
               {invoices.overdueInvoices.length > 0 && (
                 <p className="text-sm text-red-600 font-medium">{invoices.overdueInvoices.length} overdue</p>
               )}
@@ -718,8 +718,8 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
             <button
               key={f.id}
               onClick={() => setInvoiceFilter(f.id)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-                invoiceFilter === f.id ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${
+                invoiceFilter === f.id ? 'bg-surface-on text-surface' : 'bg-surface-container-high text-surface-on-variant hover:bg-surface-container-highest'
               }`}
             >
               {f.label}
@@ -729,14 +729,14 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
         <div className="flex gap-2 flex-shrink-0">
           <button
             onClick={() => setShowPaste(true)}
-            className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200"
+            className="px-3 py-2 bg-surface-container-high text-surface-on-variant rounded-md text-sm font-medium hover:bg-surface-container-highest"
             title="Paste from spreadsheet"
           >
             Paste
           </button>
           <button
             onClick={() => setShowNew(true)}
-            className="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600"
+            className="px-4 py-2 bg-primary text-primary-on rounded-md text-sm font-medium hover:bg-primary-600"
           >
             + Invoice
           </button>
@@ -745,7 +745,7 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
 
       {/* Invoice List */}
       {sortedInvoices.length === 0 ? (
-        <Card className="p-8 text-center text-gray-400">
+        <Card className="p-8 text-center text-outline">
           No invoices
         </Card>
       ) : (
@@ -757,20 +757,20 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
             return (
               <Card
                 key={invoice.id}
-                className={`p-3 cursor-pointer hover:shadow-sm transition-shadow ${isOverdue ? 'border-l-4 border-l-red-400' : ''}`}
+                className={`p-3 cursor-pointer hover:shadow-elevation-1 transition-shadow ${isOverdue ? 'border-l-4 border-l-red-400' : ''}`}
                 onClick={() => setSelectedInvoice(invoice)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-gray-900 truncate">
+                      <p className="font-medium text-surface-on truncate">
                         {invoice.invoice_number || `INV-${invoice.id.slice(0, 6)}`}
                       </p>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${INVOICE_STATUS_STYLES[isOverdue ? 'overdue' : invoice.status]}`}>
                         {isOverdue ? 'Overdue' : invoice.status}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 mt-1 text-xs text-surface-on-variant">
                       {project && <span>{project.name}</span>}
                       {invoice.description && (
                         <>
@@ -786,7 +786,7 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
                       )}
                     </div>
                   </div>
-                  <p className="font-bold text-gray-900">{formatCurrency(invoice.amount)}</p>
+                  <p className="font-bold text-surface-on">{formatCurrency(invoice.amount)}</p>
                 </div>
               </Card>
             );
@@ -799,7 +799,7 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
         {selectedInvoice && (
           <div className="space-y-5">
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-gray-900">{formatCurrency(selectedInvoice.amount)}</span>
+              <span className="text-2xl font-bold text-surface-on">{formatCurrency(selectedInvoice.amount)}</span>
               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${INVOICE_STATUS_STYLES[selectedInvoice.status]}`}>
                 {selectedInvoice.status}
               </span>
@@ -807,49 +807,49 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
 
             {selectedInvoice.description && (
               <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Description</p>
-                <p className="text-sm text-gray-700">{selectedInvoice.description}</p>
+                <p className="text-xs text-outline uppercase tracking-wider mb-1">Description</p>
+                <p className="text-sm text-surface-on">{selectedInvoice.description}</p>
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Issued</p>
-                <p className="text-gray-700">{formatDate(selectedInvoice.issue_date)}</p>
+                <p className="text-xs text-outline uppercase tracking-wider mb-1">Issued</p>
+                <p className="text-surface-on">{formatDate(selectedInvoice.issue_date)}</p>
               </div>
               {selectedInvoice.due_date && (
                 <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Due</p>
-                  <p className="text-gray-700">{formatDate(selectedInvoice.due_date)}</p>
+                  <p className="text-xs text-outline uppercase tracking-wider mb-1">Due</p>
+                  <p className="text-surface-on">{formatDate(selectedInvoice.due_date)}</p>
                 </div>
               )}
               {selectedInvoice.date_sent && (
                 <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Sent</p>
-                  <p className="text-gray-700">{formatDate(selectedInvoice.date_sent)}</p>
+                  <p className="text-xs text-outline uppercase tracking-wider mb-1">Sent</p>
+                  <p className="text-surface-on">{formatDate(selectedInvoice.date_sent)}</p>
                 </div>
               )}
               {selectedInvoice.paid_date && (
                 <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Paid</p>
-                  <p className="text-gray-700">{formatDate(selectedInvoice.paid_date)}</p>
+                  <p className="text-xs text-outline uppercase tracking-wider mb-1">Paid</p>
+                  <p className="text-surface-on">{formatDate(selectedInvoice.paid_date)}</p>
                 </div>
               )}
             </div>
 
             {selectedInvoice.notes && (
               <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Notes</p>
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedInvoice.notes}</p>
+                <p className="text-xs text-outline uppercase tracking-wider mb-1">Notes</p>
+                <p className="text-sm text-surface-on-variant whitespace-pre-wrap">{selectedInvoice.notes}</p>
               </div>
             )}
 
             {/* Status Progression */}
-            <div className="space-y-2 pt-3 border-t border-gray-100">
+            <div className="space-y-2 pt-3 border-t border-outline-variant">
               {selectedInvoice.status === 'draft' && (
                 <button
                   onClick={() => handleMarkSent(selectedInvoice.id)}
-                  className="w-full py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600"
+                  className="w-full py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600"
                 >
                   Mark as Sent
                 </button>
@@ -857,7 +857,7 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
               {(selectedInvoice.status === 'sent' || selectedInvoice.status === 'overdue') && (
                 <button
                   onClick={() => handleMarkPaid(selectedInvoice)}
-                  className="w-full py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600"
+                  className="w-full py-2 bg-green-500 text-white rounded-md text-sm font-medium hover:bg-green-600"
                 >
                   Mark as Paid (creates income transaction)
                 </button>
@@ -866,7 +866,7 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
 
             <button
               onClick={() => handleDelete(selectedInvoice.id)}
-              className="text-sm text-red-600 hover:text-red-700 font-medium"
+              className="text-sm text-red-600 hover:text-red-400 font-medium"
             >
               Delete Invoice
             </button>
@@ -909,34 +909,34 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
       <Sheet isOpen={showNew} onClose={() => setShowNew(false)} title="New Invoice">
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Invoice Number</label>
             <input
               type="text"
               value={formData.invoice_number}
               onChange={(e) => setFormData(p => ({ ...p, invoice_number: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
               placeholder="e.g., INV-001"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Amount *</label>
             <input
               type="number"
               step="0.01"
               min="0"
               value={formData.amount}
               onChange={(e) => setFormData(p => ({ ...p, amount: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
               placeholder="0.00"
               autoFocus
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Project</label>
             <select
               value={formData.project_id}
               onChange={(e) => setFormData(p => ({ ...p, project_id: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             >
               <option value="">None</option>
               {projects?.map(p => (
@@ -945,11 +945,11 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Contact</label>
             <select
               value={formData.contact_id}
               onChange={(e) => setFormData(p => ({ ...p, contact_id: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             >
               <option value="">None</option>
               {people?.map(p => (
@@ -958,28 +958,28 @@ function InvoicesTab({ invoices, projects, people, getProjectById, addTransactio
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Description</label>
             <input
               type="text"
               value={formData.description}
               onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
               placeholder="What is this invoice for?"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Due Date</label>
             <input
               type="date"
               value={formData.due_date}
               onChange={(e) => setFormData(p => ({ ...p, due_date: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             />
           </div>
           <button
             type="submit"
             disabled={!formData.amount}
-            className="w-full py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 bg-primary text-primary-on rounded-md font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Create Invoice
           </button>
@@ -1062,7 +1062,7 @@ function PasteParser({ isOpen, onClose, columns, onImport }) {
   return (
     <Sheet isOpen={isOpen} onClose={() => { onClose(); setRawText(''); setParsed([]); }} title="Paste from Spreadsheet">
       <div className="space-y-4">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-surface-on-variant">
           Copy rows from a spreadsheet and paste below. Columns: {columns.map(c => c.label).join(', ')}
         </p>
 
@@ -1075,22 +1075,22 @@ function PasteParser({ isOpen, onClose, columns, onImport }) {
             handleParse(text);
           }}
           rows={6}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+          className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary font-mono text-sm"
           placeholder="Paste spreadsheet data here (tab or comma separated)..."
           autoFocus
         />
 
         {parsed.length > 0 && (
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">
+            <p className="text-sm font-medium text-surface-on mb-2">
               Preview ({parsed.length} row{parsed.length !== 1 ? 's' : ''})
             </p>
-            <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+            <div className="max-h-64 overflow-y-auto border border-outline-variant rounded-md">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
+                  <tr className="bg-surface border-b border-outline-variant">
                     {columns.map(col => (
-                      <th key={col.key} className="px-2 py-1.5 text-left font-medium text-gray-500">
+                      <th key={col.key} className="px-2 py-1.5 text-left font-medium text-surface-on-variant">
                         {col.label}
                       </th>
                     ))}
@@ -1098,9 +1098,9 @@ function PasteParser({ isOpen, onClose, columns, onImport }) {
                 </thead>
                 <tbody>
                   {parsed.map((row, i) => (
-                    <tr key={i} className="border-b border-gray-100">
+                    <tr key={i} className="border-b border-outline-variant">
                       {columns.map(col => (
-                        <td key={col.key} className="px-2 py-1.5 text-gray-700 truncate max-w-[120px]">
+                        <td key={col.key} className="px-2 py-1.5 text-surface-on truncate max-w-[120px]">
                           {row[col.key] || '-'}
                         </td>
                       ))}
@@ -1115,7 +1115,7 @@ function PasteParser({ isOpen, onClose, columns, onImport }) {
         <button
           onClick={handleImport}
           disabled={parsed.length === 0 || importing}
-          className="w-full py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2 bg-primary text-primary-on rounded-md font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {importing ? 'Importing...' : `Import ${parsed.length} row${parsed.length !== 1 ? 's' : ''}`}
         </button>

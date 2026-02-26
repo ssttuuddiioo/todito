@@ -3,23 +3,92 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* M3 Primary — Crisp Blue */
+    --md-sys-color-primary: #60A5FA;
+    --md-sys-color-on-primary: #002B52;
+    --md-sys-color-primary-container: #1E3A5F;
+    --md-sys-color-on-primary-container: #DBEAFE;
+
+    /* M3 Secondary */
+    --md-sys-color-secondary: #B8C8DA;
+    --md-sys-color-on-secondary: #233240;
+    --md-sys-color-secondary-container: #394857;
+    --md-sys-color-on-secondary-container: #D4E4F6;
+
+    /* M3 Tertiary */
+    --md-sys-color-tertiary: #D0BCFF;
+    --md-sys-color-on-tertiary: #381E72;
+    --md-sys-color-tertiary-container: #4F378B;
+    --md-sys-color-on-tertiary-container: #EADDFF;
+
+    /* M3 Error */
+    --md-sys-color-error: #FFB4AB;
+    --md-sys-color-on-error: #690005;
+    --md-sys-color-error-container: #93000A;
+    --md-sys-color-on-error-container: #FFDAD6;
+
+    /* M3 Surface — deepened for more contrast range */
+    --md-sys-color-surface-dim: #0C0E12;
+    --md-sys-color-surface: #101318;
+    --md-sys-color-surface-bright: #323840;
+    --md-sys-color-surface-container-lowest: #080A0E;
+    --md-sys-color-surface-container-low: #171A20;
+    --md-sys-color-surface-container: #1C2026;
+    --md-sys-color-surface-container-high: #262B32;
+    --md-sys-color-surface-container-highest: #323840;
+
+    /* M3 On-Surface — brighter for legibility */
+    --md-sys-color-on-surface: #ECEEF2;
+    --md-sys-color-on-surface-variant: #CDD4DE;
+
+    /* M3 Outline — brighter for visibility */
+    --md-sys-color-outline: #9AA3AE;
+    --md-sys-color-outline-variant: #4D5660;
+
+    /* M3 Inverse */
+    --md-sys-color-inverse-surface: #E1E2E6;
+    --md-sys-color-inverse-on-surface: #2E3134;
+    --md-sys-color-inverse-primary: #0284C7;
+
+    /* M3 Special */
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-shadow: #000000;
+    --md-sys-color-surface-tint: #60A5FA;
+
+    /* M3 State layer opacities */
+    --md-sys-state-hover-opacity: 0.08;
+    --md-sys-state-focus-opacity: 0.12;
+    --md-sys-state-pressed-opacity: 0.12;
+    --md-sys-state-dragged-opacity: 0.16;
+
+    /* M3 Shape */
+    --md-sys-shape-extra-small: 4px;
+    --md-sys-shape-small: 8px;
+    --md-sys-shape-medium: 12px;
+    --md-sys-shape-large: 16px;
+    --md-sys-shape-extra-large: 28px;
+    --md-sys-shape-full: 9999px;
+  }
+
   * {
     -webkit-tap-highlight-color: transparent;
   }
-  
+
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    @apply bg-surface text-surface-on antialiased;
+    font-family: 'Roboto Flex', 'Roboto', 'Noto Sans', system-ui, -apple-system, sans-serif;
     touch-action: manipulation;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold;
+  input, textarea, select {
+    @apply bg-surface-container-high text-surface-on placeholder:text-outline;
+    color-scheme: dark;
   }
 
   /* Mobile safe area for notched devices */
@@ -32,34 +101,110 @@
 }
 
 @layer components {
+  /* === M3 State Layer System === */
+  .state-layer {
+    position: relative;
+    overflow: hidden;
+  }
+  .state-layer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 150ms ease;
+    pointer-events: none;
+  }
+  .state-layer-on-primary::before   { background-color: var(--md-sys-color-on-primary); }
+  .state-layer-on-surface::before   { background-color: var(--md-sys-color-on-surface); }
+  .state-layer-on-secondary::before { background-color: var(--md-sys-color-on-secondary-container); }
+  .state-layer-primary::before      { background-color: var(--md-sys-color-primary); }
+
+  .state-layer:hover::before        { opacity: var(--md-sys-state-hover-opacity); }
+  .state-layer:focus-visible::before { opacity: var(--md-sys-state-focus-opacity); }
+  .state-layer:active::before       { opacity: var(--md-sys-state-pressed-opacity); }
+
+  /* === M3 Elevation with surface tint overlay === */
+  .elevation-0 {
+    @apply bg-surface shadow-elevation-0;
+  }
+  .elevation-1 {
+    background-color: color-mix(in srgb, var(--md-sys-color-surface-tint) 5%, var(--md-sys-color-surface));
+    @apply shadow-elevation-1;
+  }
+  .elevation-2 {
+    background-color: color-mix(in srgb, var(--md-sys-color-surface-tint) 8%, var(--md-sys-color-surface));
+    @apply shadow-elevation-2;
+  }
+  .elevation-3 {
+    background-color: color-mix(in srgb, var(--md-sys-color-surface-tint) 11%, var(--md-sys-color-surface));
+    @apply shadow-elevation-3;
+  }
+  .elevation-4 {
+    background-color: color-mix(in srgb, var(--md-sys-color-surface-tint) 12%, var(--md-sys-color-surface));
+    @apply shadow-elevation-4;
+  }
+  .elevation-5 {
+    background-color: color-mix(in srgb, var(--md-sys-color-surface-tint) 14%, var(--md-sys-color-surface));
+    @apply shadow-elevation-5;
+  }
+
+  /* === M3 Buttons === */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply px-6 py-2.5 rounded-full text-label-lg font-medium transition-all duration-200
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-primary;
     -webkit-touch-callout: none;
     user-select: none;
-    min-height: 44px; /* iOS recommended minimum touch target */
+    min-height: 40px;
   }
 
+  /* M3 Filled Button */
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 focus:ring-primary-500;
+    @apply bg-primary text-primary-on state-layer state-layer-on-primary;
   }
 
+  /* M3 Tonal Button */
   .btn-secondary {
-    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-400 focus:ring-gray-500;
+    @apply bg-secondary-container text-secondary-on-container state-layer state-layer-on-secondary;
   }
 
+  /* M3 Outlined Button */
+  .btn-outlined {
+    @apply bg-transparent text-primary border border-outline state-layer state-layer-primary;
+  }
+
+  /* M3 Text Button */
+  .btn-text {
+    @apply bg-transparent text-primary px-3 state-layer state-layer-primary;
+  }
+
+  /* === M3 Cards === */
+  /* M3 Filled Card */
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6;
-    /* Touch-friendly card on mobile */
+    @apply bg-surface-container-high rounded-md p-4 md:p-6 shadow-elevation-1;
   }
 
+  /* M3 Elevated Card */
+  .card-elevated {
+    @apply rounded-md p-4 md:p-6 elevation-2;
+  }
+
+  /* M3 Outlined Card */
+  .card-outlined {
+    @apply bg-surface rounded-md p-4 md:p-6 border border-outline-variant;
+  }
+
+  /* === M3 Text Field === */
   .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
-    font-size: 16px; /* Prevents iOS zoom on focus */
-    min-height: 44px; /* iOS recommended minimum touch target */
+    @apply w-full px-4 py-3 bg-transparent border border-outline rounded-xs
+           text-surface-on placeholder:text-surface-on-variant
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary;
+    font-size: 21px;
+    min-height: 56px;
   }
 
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-label-lg font-medium text-surface-on-variant mb-1;
   }
 
   /* Safe area for bottom navigation */
@@ -98,7 +243,6 @@
 /* PWA viewport meta enhancements */
 @media (display-mode: standalone) {
   body {
-    background-color: #f9fafb;
+    background-color: #0C0E12;
   }
 }
-

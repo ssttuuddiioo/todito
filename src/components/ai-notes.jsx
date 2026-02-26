@@ -23,7 +23,7 @@ export function AINotes({ onNavigate }) {
   const [selectedArchive, setSelectedArchive] = useState(null);
   const [taskModifications, setTaskModifications] = useState({}); // Track energy, pomodoro changes
   const [parseMethod, setParseMethod] = useState(null); // 'structured' | 'freeform' | null
-  
+
   // Multi-select for Asana export
   const [selectedTaskIndices, setSelectedTaskIndices] = useState(new Set());
   const [showAsanaExport, setShowAsanaExport] = useState(false);
@@ -195,8 +195,8 @@ export function AINotes({ onNavigate }) {
   const findMatchingProjects = (projectName) => {
     if (!projectName || !projects) return [];
     const lowerName = projectName.toLowerCase();
-    return projects.filter(p => 
-      p.name.toLowerCase().includes(lowerName) || 
+    return projects.filter(p =>
+      p.name.toLowerCase().includes(lowerName) ||
       lowerName.includes(p.name.toLowerCase())
     );
   };
@@ -205,7 +205,7 @@ export function AINotes({ onNavigate }) {
     try {
       // Merge original task with any modifications
       const modifiedTask = getTaskWithMods(task, index);
-      
+
       const taskData = {
         title: modifiedTask.title,
         subtitle: modifiedTask.subtitle || null,
@@ -252,7 +252,7 @@ export function AINotes({ onNavigate }) {
       if (!project || !project.name) {
         throw new Error('Project name is required');
       }
-      
+
       const projectData = {
         name: project.name.trim(),
         client: project.client || '',
@@ -264,7 +264,7 @@ export function AINotes({ onNavigate }) {
         notes: project.notes || '',
         milestones: project.milestones || [],
       };
-      
+
       console.log('Creating project:', projectData);
       const createdProject = await addProject(projectData);
       console.log('Project created successfully:', createdProject);
@@ -435,12 +435,12 @@ export function AINotes({ onNavigate }) {
     }
   };
 
-  const totalItems = parsedData ? 
-    parsedData.tasks.length + 
-    parsedData.projects.length + 
-    parsedData.project_updates.length + 
-    parsedData.opportunities.length + 
-    parsedData.contacts.length + 
+  const totalItems = parsedData ?
+    parsedData.tasks.length +
+    parsedData.projects.length +
+    parsedData.project_updates.length +
+    parsedData.opportunities.length +
+    parsedData.contacts.length +
     parsedData.time_entries.length : 0;
 
   const createdCount = createdItems.size;
@@ -449,13 +449,13 @@ export function AINotes({ onNavigate }) {
     <div className="space-y-6 pb-20 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">AI Notes</h2>
-          <p className="text-gray-500 mt-1">Paste AI-generated notes and automatically extract tasks, projects, and more.</p>
+          <h2 className="text-3xl font-bold text-surface-on tracking-tight">AI Notes</h2>
+          <p className="text-surface-on-variant mt-1">Paste AI-generated notes and automatically extract tasks, projects, and more.</p>
         </div>
         <div className="flex gap-3">
           {ignoredItems?.length > 0 && (
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={() => onNavigate?.('ignored-tasks')}
               className="relative"
             >
@@ -478,25 +478,25 @@ export function AINotes({ onNavigate }) {
         {/* Input Section */}
         <div className="space-y-4">
           <Card className="p-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-surface-on-variant mb-2">
               Paste your notes here
             </label>
             <textarea
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
               placeholder="Paste notes from AI assistants, meeting transcripts, or any text containing tasks, projects, deadlines, etc..."
-              className="w-full h-96 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none font-mono text-sm"
+              className="w-full h-96 p-4 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary resize-none font-mono text-sm"
             />
             <div className="flex gap-3 mt-4">
-              <Button 
-                onClick={handleParse} 
+              <Button
+                onClick={handleParse}
                 disabled={isParsing || !noteText.trim()}
                 className="flex-1"
               >
                 {isParsing ? 'Parsing...' : 'Parse Notes'}
               </Button>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleClear}
                 disabled={isParsing}
               >
@@ -504,17 +504,17 @@ export function AINotes({ onNavigate }) {
               </Button>
             </div>
             {error && (
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+              <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/25 rounded-md text-sm text-yellow-300">
                 {error}
               </div>
             )}
             {parseMethod === 'structured' && !error && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+              <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/25 rounded-md text-sm text-blue-300">
                 Structured notes detected — parsed without AI.
               </div>
             )}
             {parseMethod === 'freeform' && !error && (
-              <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-800">
+              <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/25 rounded-md text-sm text-purple-300">
                 Freeform notes normalized via AI, then parsed.
               </div>
             )}
@@ -526,7 +526,7 @@ export function AINotes({ onNavigate }) {
           {parsedData && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-lg font-bold text-surface-on">
                   Extracted Items ({createdCount}/{totalItems} created)
                 </h3>
                 {createdCount < totalItems && (
@@ -538,22 +538,22 @@ export function AINotes({ onNavigate }) {
 
               {/* Tasks */}
               {parsedData.tasks.length > 0 && (
-                <ExtractedSection 
-                  title="Tasks" 
+                <ExtractedSection
+                  title="Tasks"
                   count={parsedData.tasks.length}
                   headerActions={
                     <div className="flex items-center gap-2">
                       {selectedTaskIndices.size > 0 ? (
                         <button
                           onClick={clearTaskSelection}
-                          className="text-xs text-gray-500 hover:text-gray-700"
+                          className="text-xs text-surface-on-variant hover:text-surface-on"
                         >
                           Clear ({selectedTaskIndices.size})
                         </button>
                       ) : (
                         <button
                           onClick={selectAllTasks}
-                          className="text-xs text-gray-500 hover:text-gray-700"
+                          className="text-xs text-surface-on-variant hover:text-surface-on"
                         >
                           Select All
                         </button>
@@ -572,10 +572,10 @@ export function AINotes({ onNavigate }) {
                   {parsedData.tasks.map((task, i) => {
                     if (sessionIgnoredItems.has(`task-${i}`)) {
                       return (
-                        <Card key={`task-${i}`} className="p-3 bg-gray-50 border-gray-200 opacity-60">
+                        <Card key={`task-${i}`} className="p-3 bg-surface border-outline-variant opacity-60">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 line-through">{task.title}</span>
-                            <span className="text-xs text-gray-400">Later</span>
+                            <span className="text-sm text-surface-on-variant line-through">{task.title}</span>
+                            <span className="text-xs text-outline">Later</span>
                           </div>
                         </Card>
                       );
@@ -614,20 +614,20 @@ export function AINotes({ onNavigate }) {
                     >
                       <div className="space-y-2">
                         <div className="flex items-start gap-2">
-                          <span className="font-medium text-gray-900 flex-1">{project.name}</span>
+                          <span className="font-medium text-surface-on flex-1">{project.name}</span>
                           {project.phase && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400">
                               {project.phase}
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-surface-on-variant">
                           {project.client && `Client: ${project.client} • `}
                           Status: {project.status}
                           {project.deadline && ` • Deadline: ${formatDate(project.deadline)}`}
                         </div>
                         {project.milestones && project.milestones.length > 0 && (
-                          <div className="text-xs text-gray-400 mt-1">
+                          <div className="text-xs text-outline mt-1">
                             {project.milestones.length} milestone{project.milestones.length > 1 ? 's' : ''} extracted
                           </div>
                         )}
@@ -651,24 +651,24 @@ export function AINotes({ onNavigate }) {
                       onLater={() => handleLaterItem('project-update', update, i)}
                     >
                       <div className="space-y-1">
-                        <div className="font-medium text-gray-900">{update.project_name}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="font-medium text-surface-on">{update.project_name}</div>
+                        <div className="text-sm text-surface-on-variant">
                           {update.status && `Status: ${update.status} • `}
                           {update.next_milestone && `Milestone: ${update.next_milestone} • `}
                           {update.deadline && `Deadline: ${formatDate(update.deadline)}`}
                         </div>
                         {update.scope && (
-                          <div className="text-sm text-gray-600 mt-1">
-                            <span className="font-medium text-gray-700">Scope:</span> {update.scope}
+                          <div className="text-sm text-surface-on-variant mt-1">
+                            <span className="font-medium text-surface-on">Scope:</span> {update.scope}
                           </div>
                         )}
                         {update.milestones && update.milestones.length > 0 && (
-                          <div className="text-sm text-gray-600 mt-1">
-                            <span className="font-medium text-gray-700">Milestones:</span>
+                          <div className="text-sm text-surface-on-variant mt-1">
+                            <span className="font-medium text-surface-on">Milestones:</span>
                             <ul className="mt-0.5 space-y-0.5">
                               {update.milestones.map((m, mi) => (
                                 <li key={mi} className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-400">{m.date}</span>
+                                  <span className="text-xs text-outline">{m.date}</span>
                                   <span>{m.title}</span>
                                 </li>
                               ))}
@@ -695,8 +695,8 @@ export function AINotes({ onNavigate }) {
                       onLater={() => handleLaterItem('opportunity', opp, i)}
                     >
                       <div className="space-y-1">
-                        <div className="font-medium text-gray-900">{opp.name}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="font-medium text-surface-on">{opp.name}</div>
+                        <div className="text-sm text-surface-on-variant">
                           {opp.contact && `Contact: ${opp.contact} • `}
                           {opp.value > 0 && `Value: $${opp.value.toLocaleString()} • `}
                           Stage: {opp.stage}
@@ -721,8 +721,8 @@ export function AINotes({ onNavigate }) {
                       onLater={() => handleLaterItem('contact', contact, i)}
                     >
                       <div className="space-y-1">
-                        <div className="font-medium text-gray-900">{contact.name}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="font-medium text-surface-on">{contact.name}</div>
+                        <div className="text-sm text-surface-on-variant">
                           {contact.company && `${contact.company} • `}
                           {contact.email && `${contact.email} • `}
                           {contact.phone}
@@ -747,8 +747,8 @@ export function AINotes({ onNavigate }) {
                       onLater={() => handleLaterItem('time-entry', entry, i)}
                     >
                       <div className="space-y-1">
-                        <div className="font-medium text-gray-900">{entry.hours}h - {entry.notes}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="font-medium text-surface-on">{entry.hours}h - {entry.notes}</div>
+                        <div className="text-sm text-surface-on-variant">
                           {entry.project_name && `Project: ${entry.project_name} • `}
                           Date: {formatDate(entry.date || new Date().toISOString().split('T')[0])}
                         </div>
@@ -760,7 +760,7 @@ export function AINotes({ onNavigate }) {
               )}
 
               {totalItems === 0 && (
-                <div className="p-8 text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                <div className="p-8 text-center text-outline border-2 border-dashed border-outline-variant rounded-lg">
                   No items extracted from notes.
                 </div>
               )}
@@ -768,7 +768,7 @@ export function AINotes({ onNavigate }) {
           )}
 
           {!parsedData && !isParsing && (
-            <Card className="p-12 text-center text-gray-400">
+            <Card className="p-12 text-center text-outline">
               <div className="text-4xl mb-4">📝</div>
               <p>Parse notes to see extracted items here</p>
             </Card>
@@ -786,28 +786,28 @@ export function AINotes({ onNavigate }) {
           <div className="space-y-4">
             <button
               onClick={() => setSelectedArchive(null)}
-              className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900"
+              className="flex items-center gap-2 text-sm text-surface-on-variant hover:text-surface-on"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Back to list
             </button>
-            
+
             <div>
-              <h3 className="font-bold text-gray-900">{selectedArchive.title}</h3>
-              <p className="text-xs text-gray-500 mt-1">
+              <h3 className="font-bold text-surface-on">{selectedArchive.title}</h3>
+              <p className="text-xs text-surface-on-variant mt-1">
                 Parsed on {formatDate(selectedArchive.created_at)}
               </p>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
-              <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">
+            <div className="bg-surface p-4 rounded-md max-h-64 overflow-y-auto">
+              <pre className="text-xs text-surface-on-variant whitespace-pre-wrap font-mono">
                 {selectedArchive.raw_text}
               </pre>
             </div>
 
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-surface-on-variant">
               <strong>Extracted:</strong>{' '}
               {selectedArchive.parsed_data?.tasks?.length || 0} tasks,{' '}
               {selectedArchive.parsed_data?.projects?.length || 0} projects,{' '}
@@ -815,7 +815,7 @@ export function AINotes({ onNavigate }) {
               {selectedArchive.parsed_data?.contacts?.length || 0} contacts
             </div>
 
-            <div className="flex gap-3 pt-4 border-t border-gray-100">
+            <div className="flex gap-3 pt-4 border-t border-outline-variant">
               <Button variant="secondary" onClick={() => handleDeleteArchive(selectedArchive.id)}>
                 Delete
               </Button>
@@ -831,27 +831,27 @@ export function AINotes({ onNavigate }) {
                 <div
                   key={archive.id}
                   onClick={() => setSelectedArchive(archive)}
-                  className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                  className="p-4 bg-surface rounded-md hover:bg-surface-container-high cursor-pointer transition-colors"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 truncate">{archive.title}</h4>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <h4 className="font-medium text-surface-on truncate">{archive.title}</h4>
+                      <p className="text-xs text-surface-on-variant mt-1">
                         {formatDate(archive.created_at)}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-outline mt-1">
                         {archive.parsed_data?.tasks?.length || 0} tasks,{' '}
                         {archive.parsed_data?.projects?.length || 0} projects
                       </p>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 text-outline shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-gray-400">
+              <div className="p-8 text-center text-outline">
                 <div className="text-4xl mb-4">📦</div>
                 <p>No archived notes yet.</p>
                 <p className="text-sm mt-2">Parse some notes to see them here.</p>
@@ -876,7 +876,7 @@ function ExtractedSection({ title, count, children, headerActions }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+        <h4 className="text-sm font-bold text-surface-on-variant uppercase tracking-wide">
           {title} ({count})
         </h4>
         {headerActions}
@@ -888,14 +888,14 @@ function ExtractedSection({ title, count, children, headerActions }) {
 
 function ExtractedItem({ children, isCreated, onCreate, onLater }) {
   return (
-    <Card className={`p-4 ${isCreated ? 'bg-green-50 border-green-200' : ''}`}>
+    <Card className={`p-4 ${isCreated ? 'bg-green-500/10 border-green-500/25' : ''}`}>
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">{children}</div>
         <div className="flex items-center gap-2 shrink-0">
           {!isCreated ? (
             <>
-              <Button 
-                onClick={onLater} 
+              <Button
+                onClick={onLater}
                 variant="secondary"
                 className="text-xs px-3 py-1.5"
                 title="Save for later"
@@ -907,7 +907,7 @@ function ExtractedItem({ children, isCreated, onCreate, onLater }) {
               </Button>
             </>
           ) : (
-            <span className="text-xs text-green-700 font-medium">✓ Created</span>
+            <span className="text-xs text-green-400 font-medium">✓ Created</span>
           )}
         </div>
       </div>
@@ -928,10 +928,10 @@ const ENERGY_TYPES = [
 ];
 
 const PRIORITY_OPTIONS = [
-  { id: '', label: 'No Priority', color: 'bg-gray-100 border-gray-300 text-gray-600' },
-  { id: 'low', label: '🟢 Low', color: 'bg-green-100 border-green-300 text-green-700' },
-  { id: 'medium', label: '🟡 Medium', color: 'bg-yellow-100 border-yellow-300 text-yellow-700' },
-  { id: 'high', label: '🔴 High', color: 'bg-red-100 border-red-300 text-red-700' },
+  { id: '', label: 'No Priority', color: 'bg-surface-container-high border-outline text-surface-on-variant' },
+  { id: 'low', label: '🟢 Low', color: 'bg-green-500/15 border-green-500/30 text-green-400' },
+  { id: 'medium', label: '🟡 Medium', color: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-400' },
+  { id: 'high', label: '🔴 High', color: 'bg-red-500/15 border-red-500/30 text-red-400' },
 ];
 
 function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect, onCreate, onLater, onUpdateField }) {
@@ -949,7 +949,7 @@ function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect,
   };
 
   return (
-    <Card className={`p-4 ${isCreated ? 'bg-green-50 border-green-200' : ''} ${isSelected ? 'ring-2 ring-primary-500 ring-offset-1' : ''}`}>
+    <Card className={`p-4 ${isCreated ? 'bg-green-500/10 border-green-500/25' : ''} ${isSelected ? 'ring-2 ring-primary ring-offset-1' : ''}`}>
       <div className="space-y-3">
         {/* Title row */}
         <div className="flex items-start gap-2">
@@ -959,36 +959,36 @@ function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect,
               type="checkbox"
               checked={isSelected}
               onChange={onToggleSelect}
-              className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+              className="mt-1 h-4 w-4 rounded border-outline text-primary focus:ring-primary cursor-pointer"
               title="Select for Asana export"
             />
           )}
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-gray-900 flex items-center gap-2 flex-wrap">
+            <div className="font-medium text-surface-on flex items-center gap-2 flex-wrap">
               <span>
-                {isTitleLong && !titleExpanded ? task.title.slice(0, 60) + '…' : task.title}
+                {isTitleLong && !titleExpanded ? task.title.slice(0, 60) + '...' : task.title}
                 {isTitleLong && (
                   <button
                     onClick={() => setTitleExpanded(!titleExpanded)}
-                    className="text-xs text-primary-500 hover:text-primary-700 ml-1"
+                    className="text-xs text-primary hover:text-primary ml-1"
                   >
                     {titleExpanded ? 'less' : 'more'}
                   </button>
                 )}
               </span>
               {task.waiting_on && task.waiting_on.length > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 shrink-0">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 shrink-0">
                   Blocked
                 </span>
               )}
               {task.project_name && task.project_name.includes('Untagged') && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 shrink-0">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 shrink-0">
                   Untagged
                 </span>
               )}
             </div>
             {task.subtitle && (
-              <div className="text-xs text-gray-500 mt-0.5">{task.subtitle}</div>
+              <div className="text-xs text-surface-on-variant mt-0.5">{task.subtitle}</div>
             )}
           </div>
         </div>
@@ -1004,10 +1004,10 @@ function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect,
                   onClick={() => onUpdateField('energy', energy.id === currentEnergy ? '' : energy.id)}
                   className={`text-xs px-2 py-1 rounded-md border transition-all ${
                     currentEnergy === energy.id
-                      ? 'bg-primary-100 border-primary-300 text-primary-700'
+                      ? 'bg-primary-container border-primary text-primary'
                       : energy.id === '' && currentEnergy === ''
-                        ? 'bg-gray-100 border-gray-300 text-gray-600'
-                        : 'bg-white border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300'
+                        ? 'bg-surface-container-high border-outline text-surface-on-variant'
+                        : 'bg-surface-container border-outline-variant text-outline hover:text-surface-on-variant hover:border-outline'
                   }`}
                   title={energy.desc || ''}
                 >
@@ -1025,7 +1025,7 @@ function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect,
                   className={`text-xs px-2 py-1 rounded-md border transition-all ${
                     currentPriority === priority.id
                       ? priority.color
-                      : 'bg-white border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300'
+                      : 'bg-surface-container border-outline-variant text-outline hover:text-surface-on-variant hover:border-outline'
                   }`}
                 >
                   {priority.label}
@@ -1038,47 +1038,47 @@ function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect,
               <button
                 onClick={handlePomoIncrement}
                 className={`flex items-center gap-1 px-2 h-7 rounded border transition-all text-sm ${
-                  pomodoroCount > 0 
-                    ? 'border-red-200 bg-red-50 hover:bg-red-100' 
-                    : 'border-gray-200 bg-white hover:bg-gray-50'
+                  pomodoroCount > 0
+                    ? 'border-red-500/25 bg-red-500/10 hover:bg-red-500/20'
+                    : 'border-outline-variant bg-surface-container hover:bg-surface'
                 }`}
                 title="Click to add pomodoros (cycles 0→1→2→3→🍇→0...)"
               >
                 {pomodoroCount === 0 ? (
-                  <span className="text-gray-300">🍅</span>
+                  <span className="text-outline">🍅</span>
                 ) : pomodoroCount >= 4 ? (
                   <span>🍇</span>
                 ) : (
                   <span>{'🍅'.repeat(pomodoroCount)}</span>
                 )}
-                <span className="text-gray-400 text-xs">+</span>
+                <span className="text-outline text-xs">+</span>
               </button>
-              
+
               {/* Add details button */}
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="text-xs text-gray-500 hover:text-gray-700 underline"
+                className="text-xs text-surface-on-variant hover:text-surface-on underline"
               >
                 {showDetails ? 'Hide details' : '+ Add details'}
               </button>
             </div>
           </div>
         )}
-        
+
         {/* Details input */}
         {showDetails && !isCreated && (
           <textarea
             value={task.subtitle || ''}
             onChange={(e) => onUpdateField('subtitle', e.target.value)}
             placeholder="Add notes or details..."
-            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 resize-none"
+            className="w-full text-sm border border-outline-variant rounded-md px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary resize-none"
             rows={2}
           />
         )}
 
         {/* Meta info */}
         {(task.project_name || task.due_date) && (
-          <div className="text-xs text-gray-500 flex flex-wrap gap-x-2">
+          <div className="text-xs text-surface-on-variant flex flex-wrap gap-x-2">
             {task.project_name && <span>📁 {task.project_name}</span>}
             {task.due_date && <span>📅 {task.due_date}</span>}
           </div>
@@ -1086,23 +1086,23 @@ function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect,
 
         {/* Waiting on metadata */}
         {task.waiting_on && task.waiting_on.length > 0 && (
-          <div className="text-xs bg-amber-50 border border-amber-200 rounded-md px-3 py-2 space-y-1">
+          <div className="text-xs bg-amber-500/10 border border-amber-500/25 rounded-md px-3 py-2 space-y-1">
             {task.waiting_on.map((wo, woIdx) => (
-              <div key={woIdx} className="text-amber-800">
+              <div key={woIdx} className="text-amber-300">
                 <span className="font-medium">{wo.contact}</span>
                 {wo.description && <span> — {wo.description}</span>}
-                {wo.date_context && <span className="text-amber-600"> (mentioned {wo.date_context})</span>}
+                {wo.date_context && <span className="text-amber-400"> (mentioned {wo.date_context})</span>}
               </div>
             ))}
           </div>
         )}
 
         {/* Action buttons */}
-        <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant">
           {!isCreated ? (
             <>
-              <Button 
-                onClick={onLater} 
+              <Button
+                onClick={onLater}
                 variant="secondary"
                 className="text-xs px-3 py-1.5"
               >
@@ -1113,11 +1113,10 @@ function ExtractedTaskItem({ task, index, isCreated, isSelected, onToggleSelect,
               </Button>
             </>
           ) : (
-            <span className="text-xs text-green-700 font-medium">✓ Created</span>
+            <span className="text-xs text-green-400 font-medium">✓ Created</span>
           )}
         </div>
       </div>
     </Card>
   );
 }
-

@@ -13,45 +13,45 @@ export function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+      <div className="bg-surface-container-highest rounded-xl shadow-elevation-3 p-8 max-w-md w-full">
         <div className="text-center space-y-6">
           {/* Logo/Icon */}
           <div className="text-6xl">🎯</div>
-          
+
           {/* Title */}
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-surface-on mb-2">
               Opportunity Tracker
             </h1>
-            <p className="text-gray-600">
+            <p className="text-surface-on-variant">
               Track sales opportunities and manage client projects
             </p>
           </div>
 
           {/* Description */}
-          <div className="text-left bg-gray-50 rounded-lg p-4 space-y-2">
+          <div className="text-left bg-surface-container rounded-md p-4 space-y-2">
             <div className="flex items-start space-x-2">
-              <span className="text-primary-600 mt-0.5">✓</span>
-              <p className="text-sm text-gray-700">
+              <span className="text-primary mt-0.5">✓</span>
+              <p className="text-sm text-surface-on">
                 Track opportunities through your sales pipeline
               </p>
             </div>
             <div className="flex items-start space-x-2">
-              <span className="text-primary-600 mt-0.5">✓</span>
-              <p className="text-sm text-gray-700">
+              <span className="text-primary mt-0.5">✓</span>
+              <p className="text-sm text-surface-on">
                 Manage active projects with milestones
               </p>
             </div>
             <div className="flex items-start space-x-2">
-              <span className="text-primary-600 mt-0.5">✓</span>
-              <p className="text-sm text-gray-700">
+              <span className="text-primary mt-0.5">✓</span>
+              <p className="text-sm text-surface-on">
                 Sync deadlines with Google Calendar
               </p>
             </div>
             <div className="flex items-start space-x-2">
-              <span className="text-primary-600 mt-0.5">✓</span>
-              <p className="text-sm text-gray-700">
+              <span className="text-primary mt-0.5">✓</span>
+              <p className="text-sm text-surface-on">
                 Access anywhere on mobile or desktop
               </p>
             </div>
@@ -84,7 +84,7 @@ export function Auth() {
           </Button>
 
           {/* Privacy Note */}
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-surface-on-variant">
             By continuing, you agree to our Terms of Service and Privacy Policy
           </p>
         </div>
@@ -92,6 +92,3 @@ export function Auth() {
     </div>
   );
 }
-
-
-

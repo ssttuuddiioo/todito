@@ -12,8 +12,8 @@ export function TaskArchive({ onNavigate }) {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Task Archive</h2>
-          <p className="text-gray-500 mt-1">View all completed and archived tasks.</p>
+          <h2 className="text-3xl font-bold text-surface-on tracking-tight">Task Archive</h2>
+          <p className="text-surface-on-variant mt-1">View all completed and archived tasks.</p>
         </div>
         <Button variant="secondary" onClick={() => onNavigate?.('tasks')}>
           ← Back to Tasks
@@ -23,12 +23,12 @@ export function TaskArchive({ onNavigate }) {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
-          <div className="text-sm text-gray-500">Total Archived</div>
-          <div className="text-2xl font-bold text-gray-900 mt-1">{archivedTasks?.length || 0}</div>
+          <div className="text-sm text-surface-on-variant">Total Archived</div>
+          <div className="text-2xl font-bold text-surface-on mt-1">{archivedTasks?.length || 0}</div>
         </Card>
         <Card className="p-4">
-          <div className="text-sm text-gray-500">This Month</div>
-          <div className="text-2xl font-bold text-gray-900 mt-1">
+          <div className="text-sm text-surface-on-variant">This Month</div>
+          <div className="text-2xl font-bold text-surface-on mt-1">
             {archivedTasks?.filter(t => {
               const archivedDate = new Date(t.archived_at || t.created_at);
               const now = new Date();
@@ -37,8 +37,8 @@ export function TaskArchive({ onNavigate }) {
           </div>
         </Card>
         <Card className="p-4">
-          <div className="text-sm text-gray-500">This Week</div>
-          <div className="text-2xl font-bold text-gray-900 mt-1">
+          <div className="text-sm text-surface-on-variant">This Week</div>
+          <div className="text-2xl font-bold text-surface-on mt-1">
             {archivedTasks?.filter(t => {
               const archivedDate = new Date(t.archived_at || t.created_at);
               const now = new Date();
@@ -63,15 +63,15 @@ export function TaskArchive({ onNavigate }) {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <h4 className="font-medium text-gray-900 line-through">{task.title}</h4>
+                      <h4 className="font-medium text-surface-on line-through">{task.title}</h4>
                       {task.priority === 'high' && (
-                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">High</span>
+                        <span className="text-xs bg-red-500/15 text-red-400 px-2 py-0.5 rounded">High</span>
                       )}
                     </div>
                     {task.description && (
-                      <p className="text-sm text-gray-500 mt-1">{task.description}</p>
+                      <p className="text-sm text-surface-on-variant mt-1">{task.description}</p>
                     )}
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-4 mt-2 text-xs text-outline">
                       {task.archived_at && (
                         <span>Archived: {formatDate(task.archived_at)}</span>
                       )}
@@ -92,8 +92,8 @@ export function TaskArchive({ onNavigate }) {
         </div>
       ) : (
         <Card className="p-12 text-center">
-          <div className="text-gray-400 text-lg">No archived tasks yet</div>
-          <p className="text-sm text-gray-500 mt-2">
+          <div className="text-outline text-lg">No archived tasks yet</div>
+          <p className="text-sm text-surface-on-variant mt-2">
             Completed tasks will appear here after you click "Clear" in the Done column
           </p>
         </Card>
@@ -101,6 +101,3 @@ export function TaskArchive({ onNavigate }) {
     </div>
   );
 }
-
-
-

@@ -1,15 +1,17 @@
 import { cn } from '@/lib/utils';
 
-export function Button({ 
-  children, 
-  variant = 'primary', 
-  className = '', 
-  ...props 
+export function Button({
+  children,
+  variant = 'primary',
+  className = '',
+  ...props
 }) {
   const baseStyles = 'btn';
   const variantStyles = {
     primary: 'btn-primary',
     secondary: 'btn-secondary',
+    outlined: 'btn-outlined',
+    text: 'btn-text',
   };
 
   return (
@@ -21,6 +23,3 @@ export function Button({
     </button>
   );
 }
-
-
-

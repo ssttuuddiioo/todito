@@ -51,7 +51,7 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState(null);
   const [taskMarkedInProgress, setTaskMarkedInProgress] = useState(false);
-  
+
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
   const originalTitleRef = useRef(document.title);
@@ -85,20 +85,20 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
       const existingNotes = task.description || '';
       const timestamp = new Date().toLocaleString();
       const newNote = `\n\n--- Pomodoro Notes (${timestamp}) ---\n${notes}`;
-      onUpdateTask(task.id, { 
-        description: existingNotes + newNote 
+      onUpdateTask(task.id, {
+        description: existingNotes + newNote
       });
     }
-    
+
     // Stop audio
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
-    
+
     // Restore title
     document.title = originalTitleRef.current;
-    
+
     onClose();
   }, [notes, task, onUpdateTask, onClose]);
 
@@ -109,7 +109,7 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
       if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
         return;
       }
-      
+
       if (e.code === 'Space') {
         e.preventDefault();
         setIsRunning(prev => !prev);
@@ -146,21 +146,21 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
         audioRef.current.pause();
         audioRef.current.src = '';
       }
-      
+
       const audio = new Audio();
       audioRef.current = audio;
-      
+
       // Set up event handlers before setting src
       audio.oncanplay = () => {
         console.log('Audio can play');
       };
-      
+
       audio.onplaying = () => {
         console.log('Audio is playing');
         setIsPlaying(true);
         setAudioError(null);
       };
-      
+
       audio.onerror = (e) => {
         console.error('Audio error:', e);
         setAudioError('Stream unavailable. Try another channel.');
@@ -174,10 +174,10 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
       // Set source and play
       audio.src = selectedChannel.url;
       audio.volume = volume;
-      
+
       console.log('Attempting to play:', selectedChannel.url);
       await audio.play();
-      
+
     } catch (err) {
       console.error('Playback error:', err);
       setAudioError(`Playback failed: ${err.message || 'Unknown error'}`);
@@ -192,7 +192,7 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
       audioRef.current.pause();
       audioRef.current.src = '';
     }
-    
+
     setSelectedChannel(channel);
     setIsPlaying(false);
     setAudioError(null);
@@ -214,16 +214,16 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
     } else if (timeRemaining === 0) {
       // Timer complete
       setIsRunning(false);
-      
+
       // Play notification sound
       const notificationSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleVAiQJnIuXZSHil4q8CAR0swcKS/e0dOVHaYrmRLX2V2l6NhTFtgcpigY1FYX3SWn2FXX15ykJpgYGJfbYiWYW5mXmh9kmSAb11ceYxniHlcVnWHaJJ/WU5xg2qchFVIcIJwpIZPQnB/dq6LR0R0g36wikNIdYaEto9BWHuKir2TN1l/kJLDlihgf5OYyJcbboGUncuXEnaAlZ/LlQt7f5OfypUI');
       notificationSound.play().catch(() => {});
-      
+
       // Determine next state
       if (pomodoroState === POMODORO_STATES.WORK) {
         const newCompleted = completedPomodoros + 1;
         setCompletedPomodoros(newCompleted);
-        
+
         if (newCompleted % 4 === 0) {
           setPomodoroState(POMODORO_STATES.LONG_BREAK);
           setTimeRemaining(DURATIONS[POMODORO_STATES.LONG_BREAK]);
@@ -257,7 +257,7 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
   const toggleTimer = () => {
     const newIsRunning = !isRunning;
     setIsRunning(newIsRunning);
-    
+
     // Mark current task as in_progress when starting timer
     if (newIsRunning && task && !taskMarkedInProgress && onUpdateTask) {
       onUpdateTask(task.id, { status: 'in_progress' });
@@ -329,8 +329,8 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
               <div
                 key={queueTask.id}
                 className={`flex items-center gap-2 text-sm py-1.5 px-2 rounded transition-all ${
-                  task?.id === queueTask.id 
-                    ? 'bg-white/20 text-white font-medium' 
+                  task?.id === queueTask.id
+                    ? 'bg-white/20 text-white font-medium'
                     : 'text-white/50 hover:text-white/70'
                 }`}
               >
@@ -391,8 +391,8 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
 
       {/* Notes panel */}
       {showNotes && (
-        <div 
-          className="absolute top-20 left-6 w-80 bg-black/60 backdrop-blur-xl rounded-2xl p-6 space-y-4 animate-in slide-in-from-left z-50"
+        <div
+          className="absolute top-20 left-6 w-80 bg-black/60 backdrop-blur-xl rounded-xl p-6 space-y-4 animate-in slide-in-from-left z-50"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between">
@@ -401,17 +401,17 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
               <span className="text-xs text-white/50">Saves to task</span>
             )}
           </div>
-          
+
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             onFocus={(e) => e.target.select()}
             placeholder="Jot down thoughts, progress, blockers..."
-            className="w-full h-40 bg-white/20 border border-white/30 rounded-xl p-4 text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/25 cursor-text"
+            className="w-full h-40 bg-white/20 border border-white/30 rounded-lg p-4 text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/25 cursor-text"
             style={{ pointerEvents: 'auto' }}
             autoFocus
           />
-          
+
           <p className="text-white/40 text-xs">
             Notes will be added to the task when you exit.
           </p>
@@ -420,8 +420,8 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
 
       {/* Music panel */}
       {showSettings && (
-        <div 
-          className="absolute top-20 right-6 w-72 bg-black/60 backdrop-blur-xl rounded-2xl p-6 space-y-4 animate-in slide-in-from-right z-50"
+        <div
+          className="absolute top-20 right-6 w-72 bg-black/60 backdrop-blur-xl rounded-xl p-6 space-y-4 animate-in slide-in-from-right z-50"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between">
@@ -430,8 +430,8 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
               <button
                 onClick={toggleMusic}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  isPlaying 
-                    ? 'bg-red-500/80 text-white hover:bg-red-500' 
+                  isPlaying
+                    ? 'bg-red-500/80 text-white hover:bg-red-500'
                     : 'bg-green-500 text-white hover:bg-green-400'
                 }`}
               >
@@ -441,23 +441,23 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
           </div>
 
           {audioError && (
-            <div className="text-yellow-300 text-sm bg-yellow-900/30 px-3 py-2 rounded-lg">
+            <div className="text-yellow-300 text-sm bg-yellow-900/30 px-3 py-2 rounded-md">
               ⚠️ {audioError}
             </div>
           )}
 
           {isPlaying && (
-            <div className="text-green-400 text-sm bg-green-900/30 px-3 py-2 rounded-lg flex items-center gap-2">
+            <div className="text-green-400 text-sm bg-green-900/30 px-3 py-2 rounded-md flex items-center gap-2">
               <span className="animate-pulse">♪</span> Now playing: {selectedChannel.name}
             </div>
           )}
-          
+
           <div className="space-y-1 max-h-48 overflow-y-auto">
             {MUSIC_CHANNELS.map(channel => (
               <button
                 key={channel.id}
                 onClick={() => selectChannel(channel)}
-                className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
+                className={`w-full text-left px-4 py-2.5 rounded-md transition-colors ${
                   selectedChannel.id === channel.id
                     ? 'bg-white/25 text-white font-medium'
                     : 'text-white/70 hover:bg-white/10 hover:text-white'
@@ -556,7 +556,7 @@ export function PomodoroTimer({ onClose, taskTitle, task, onUpdateTask, focusQue
 
           <button
             onClick={toggleTimer}
-            className="p-8 rounded-full bg-white/20 hover:bg-white/30 transition-all transform hover:scale-105 text-white shadow-lg"
+            className="p-8 rounded-full bg-white/20 hover:bg-white/30 transition-all transform hover:scale-105 text-white shadow-elevation-3"
           >
             {isRunning ? (
               <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">

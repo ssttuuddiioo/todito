@@ -33,21 +33,21 @@ export function Login({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg shadow-primary-500/30 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-container rounded-xl mb-4">
             <span className="text-3xl">🍅</span>
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Todito</h1>
-          <p className="text-slate-400 mt-1">Task & Project Management</p>
+          <h1 className="text-3xl font-bold text-surface-on tracking-tight">Todito</h1>
+          <p className="text-surface-on-variant mt-1">Task & Project Management</p>
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-surface-container border border-outline-variant rounded-xl p-6 space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
+            <label htmlFor="email" className="block text-sm font-medium text-surface-on-variant mb-1.5">
               Email
             </label>
             <input
@@ -55,7 +55,7 @@ export function Login({ onLoginSuccess }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-2.5 bg-surface-container-high border border-outline rounded-sm text-surface-on placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               placeholder="pablo@studiostudio.nyc"
               required
               autoComplete="email"
@@ -64,7 +64,7 @@ export function Login({ onLoginSuccess }) {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1.5">
+            <label htmlFor="password" className="block text-sm font-medium text-surface-on-variant mb-1.5">
               Password
             </label>
             <input
@@ -72,7 +72,7 @@ export function Login({ onLoginSuccess }) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-2.5 bg-surface-container-high border border-outline rounded-sm text-surface-on placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               placeholder="Enter password"
               required
               autoComplete="current-password"
@@ -80,7 +80,7 @@ export function Login({ onLoginSuccess }) {
           </div>
 
           {error && (
-            <div className="text-red-400 text-sm text-center py-2 px-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <div className="text-error text-sm text-center py-2 px-3 bg-error-container/20 border border-error-container/30 rounded-sm">
               {error}
             </div>
           )}
@@ -88,7 +88,7 @@ export function Login({ onLoginSuccess }) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium rounded-lg hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary-500/25"
+            className="w-full py-2.5 px-4 bg-primary text-primary-on font-medium rounded-full hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
@@ -112,7 +112,7 @@ export function Login({ onLoginSuccess }) {
 export function isLoggedIn() {
   const session = localStorage.getItem('todito_session');
   if (!session) return false;
-  
+
   try {
     const { timestamp } = JSON.parse(session);
     // Session expires after 7 days

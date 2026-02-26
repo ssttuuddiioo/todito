@@ -92,7 +92,7 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
     try {
       const result = await exportTasks(tasks, selectedProject, selectedWorkspace, saveAsDefault);
       setExportResult(result);
-      
+
       if (result.created > 0 && result.failed === 0) {
         // All successful - notify parent after brief delay
         setTimeout(() => {
@@ -118,11 +118,11 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
       <Sheet isOpen={isOpen} onClose={handleClose} title="Export to Asana">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-5xl mb-4">⚙️</div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Asana Not Configured</h3>
-          <p className="text-gray-500 text-sm max-w-xs">
+          <h3 className="text-lg font-bold text-surface-on mb-2">Asana Not Configured</h3>
+          <p className="text-surface-on-variant text-sm max-w-xs">
             To enable Asana export, add your Asana OAuth credentials to the environment variables.
           </p>
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-600 font-mono text-left">
+          <div className="mt-4 p-3 bg-surface rounded-md text-xs text-surface-on-variant font-mono text-left">
             <div>VITE_ASANA_CLIENT_ID=...</div>
             <div>VITE_ASANA_REDIRECT_URI=...</div>
           </div>
@@ -136,7 +136,7 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
     return (
       <Sheet isOpen={isOpen} onClose={handleClose} title="Export to Asana">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       </Sheet>
     );
@@ -147,20 +147,20 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
     return (
       <Sheet isOpen={isOpen} onClose={handleClose} title="Export to Asana">
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-rose-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-rose-400 to-orange-500 rounded-lg flex items-center justify-center mb-4">
             <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
               <circle cx="12" cy="12" r="10"/>
             </svg>
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Connect Your Asana Account</h3>
-          <p className="text-gray-500 text-sm max-w-xs mb-6">
+          <h3 className="text-lg font-bold text-surface-on mb-2">Connect Your Asana Account</h3>
+          <p className="text-surface-on-variant text-sm max-w-xs mb-6">
             Link your Asana account to export tasks directly to your projects.
           </p>
           <Button onClick={connectAsana}>
             Connect Asana
           </Button>
           {error && (
-            <p className="mt-4 text-sm text-red-600">{error}</p>
+            <p className="mt-4 text-sm text-red-400">{error}</p>
           )}
         </div>
       </Sheet>
@@ -170,12 +170,12 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
   // Export result state
   if (exportResult) {
     const hasErrors = exportResult.error || exportResult.failed > 0;
-    
+
     return (
       <Sheet isOpen={isOpen} onClose={handleClose} title="Export to Asana">
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
-            hasErrors ? 'bg-red-100' : 'bg-green-100'
+            hasErrors ? 'bg-red-500/15' : 'bg-green-500/15'
           }`}>
             {hasErrors ? (
               <span className="text-3xl">⚠️</span>
@@ -183,23 +183,23 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
               <span className="text-3xl">✅</span>
             )}
           </div>
-          
+
           {exportResult.error ? (
             <>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Export Failed</h3>
-              <p className="text-red-600 text-sm">{exportResult.error}</p>
+              <h3 className="text-lg font-bold text-surface-on mb-2">Export Failed</h3>
+              <p className="text-red-400 text-sm">{exportResult.error}</p>
             </>
           ) : (
             <>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
+              <h3 className="text-lg font-bold text-surface-on mb-2">
                 {exportResult.created} Task{exportResult.created !== 1 ? 's' : ''} Exported
               </h3>
               {exportResult.failed > 0 && (
-                <p className="text-amber-600 text-sm mb-4">
+                <p className="text-amber-400 text-sm mb-4">
                   {exportResult.failed} task{exportResult.failed !== 1 ? 's' : ''} failed to export
                 </p>
               )}
-              <p className="text-gray-500 text-sm">
+              <p className="text-surface-on-variant text-sm">
                 Tasks have been added to your Asana project.
               </p>
             </>
@@ -223,23 +223,23 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
     <Sheet isOpen={isOpen} onClose={handleClose} title="Export to Asana">
       <div className="space-y-6">
         {/* Connection info */}
-        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+        <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-md border border-green-500/25">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-rose-400 to-orange-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">✓</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-rose-400 to-orange-500 rounded-md flex items-center justify-center">
+              <span className="text-primary-on text-sm">✓</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-surface-on">
                 {connection?.asana_user_name || 'Connected to Asana'}
               </p>
               {connection?.asana_user_email && (
-                <p className="text-xs text-gray-500">{connection.asana_user_email}</p>
+                <p className="text-xs text-surface-on-variant">{connection.asana_user_email}</p>
               )}
             </div>
           </div>
           <button
             onClick={disconnectAsana}
-            className="text-xs text-gray-500 hover:text-red-600 transition-colors"
+            className="text-xs text-surface-on-variant hover:text-red-400 transition-colors"
           >
             Disconnect
           </button>
@@ -247,14 +247,14 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
 
         {/* Workspace selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-surface-on-variant mb-2">
             Workspace
           </label>
           <select
             value={selectedWorkspace}
             onChange={(e) => setSelectedWorkspace(e.target.value)}
             disabled={loadingWorkspaces}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="">
               {loadingWorkspaces ? 'Loading workspaces...' : 'Select a workspace'}
@@ -269,18 +269,18 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
 
         {/* Project selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-surface-on-variant mb-2">
             Project
           </label>
           <select
             value={selectedProject}
             onChange={(e) => setSelectedProject(e.target.value)}
             disabled={!selectedWorkspace || loadingProjects}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-50 disabled:text-gray-400"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-surface disabled:text-outline"
           >
             <option value="">
-              {loadingProjects ? 'Loading projects...' : 
-               !selectedWorkspace ? 'Select a workspace first' : 
+              {loadingProjects ? 'Loading projects...' :
+               !selectedWorkspace ? 'Select a workspace first' :
                'Select a project'}
             </option>
             {projects.map(project => (
@@ -298,19 +298,19 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
             id="save-default"
             checked={saveAsDefault}
             onChange={(e) => setSaveAsDefault(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            className="h-4 w-4 rounded border-outline text-primary focus:ring-primary"
           />
-          <label htmlFor="save-default" className="text-sm text-gray-700">
+          <label htmlFor="save-default" className="text-sm text-surface-on-variant">
             Remember this project as default
           </label>
         </div>
 
         {/* Tasks preview */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-surface-on-variant mb-2">
             Tasks to Export ({tasks.length})
           </label>
-          <div className="max-h-48 overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-2">
+          <div className="max-h-48 overflow-y-auto space-y-2 border border-outline-variant rounded-md p-2">
             {tasks.map((task, index) => (
               <TaskPreviewItem key={task.id || index} task={task} />
             ))}
@@ -319,13 +319,13 @@ export function AsanaExportSheet({ isOpen, onClose, tasks, onExportComplete }) {
 
         {/* Error display */}
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <div className="p-3 bg-red-500/10 border border-red-500/25 rounded-md text-sm text-red-400">
             {error}
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex gap-3 pt-4 border-t border-gray-100">
+        <div className="flex gap-3 pt-4 border-t border-outline-variant">
           <Button variant="secondary" onClick={handleClose}>
             Cancel
           </Button>
@@ -360,9 +360,9 @@ function TaskPreviewItem({ task }) {
     <Card className="p-2">
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
+          <p className="text-sm font-medium text-surface-on truncate">{task.title}</p>
           {task.subtitle && (
-            <p className="text-xs text-gray-500 truncate">{task.subtitle}</p>
+            <p className="text-xs text-surface-on-variant truncate">{task.subtitle}</p>
           )}
           <div className="flex items-center gap-2 mt-1">
             {priorityInfo && (
@@ -376,7 +376,7 @@ function TaskPreviewItem({ task }) {
               </span>
             )}
             {task.due_date && (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-outline">
                 📅 {task.due_date}
               </span>
             )}
@@ -386,5 +386,3 @@ function TaskPreviewItem({ task }) {
     </Card>
   );
 }
-
-

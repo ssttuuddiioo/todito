@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 export function AddTaskSheet({ isOpen, onClose, preselectedProjectId }) {
   const { addTask } = useTasks();
   const { activeProjects } = useProjects();
-  
+
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
@@ -34,7 +34,7 @@ export function AddTaskSheet({ isOpen, onClose, preselectedProjectId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
-    
+
     setSaving(true);
     try {
       await addTask({
@@ -60,14 +60,14 @@ export function AddTaskSheet({ isOpen, onClose, preselectedProjectId }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-surface-on-variant mb-1">
             What needs to be done? *
           </label>
           <input
             type="text"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg"
+            className="w-full px-3 py-3 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-lg"
             placeholder="Order media server"
             autoFocus
             required
@@ -76,13 +76,13 @@ export function AddTaskSheet({ isOpen, onClose, preselectedProjectId }) {
 
         {/* Notes */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-surface-on-variant mb-1">
             Notes (optional)
           </label>
           <textarea
             value={formData.subtitle}
             onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
             placeholder="Additional details..."
             rows={2}
           />
@@ -90,13 +90,13 @@ export function AddTaskSheet({ isOpen, onClose, preselectedProjectId }) {
 
         {/* Project */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-surface-on-variant mb-1">
             Project
           </label>
           <select
             value={formData.project_id}
             onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-3 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="">No project</option>
             {activeProjects.map(p => (
@@ -107,37 +107,37 @@ export function AddTaskSheet({ isOpen, onClose, preselectedProjectId }) {
 
         {/* Due Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-surface-on-variant mb-1">
             Due date
           </label>
           <input
             type="date"
             value={formData.due_date}
             onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-3 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
           />
         </div>
 
         {/* Priority */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-surface-on-variant mb-2">
             Priority
           </label>
           <div className="flex gap-2">
             {[
-              { id: '', label: 'None', color: 'bg-gray-100 text-gray-600' },
-              { id: 'low', label: 'Low', color: 'bg-green-100 text-green-700' },
-              { id: 'medium', label: 'Medium', color: 'bg-amber-100 text-amber-700' },
-              { id: 'high', label: 'High', color: 'bg-red-100 text-red-700' },
+              { id: '', label: 'None', color: 'bg-surface-container-high text-surface-on-variant' },
+              { id: 'low', label: 'Low', color: 'bg-green-500/15 text-green-400' },
+              { id: 'medium', label: 'Medium', color: 'bg-amber-500/15 text-amber-400' },
+              { id: 'high', label: 'High', color: 'bg-red-500/15 text-red-400' },
             ].map(p => (
               <button
                 key={p.id}
                 type="button"
                 onClick={() => setFormData({ ...formData, priority: p.id })}
-                className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                   formData.priority === p.id
-                    ? `${p.color} ring-2 ring-offset-1 ring-gray-400`
-                    : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                    ? `${p.color} ring-2 ring-offset-1 ring-outline`
+                    : 'bg-surface-container text-outline hover:bg-surface-container-high'
                 }`}
               >
                 {p.label}
@@ -146,9 +146,9 @@ export function AddTaskSheet({ isOpen, onClose, preselectedProjectId }) {
           </div>
         </div>
 
-        <Button 
-          type="submit" 
-          disabled={saving || !formData.title.trim()} 
+        <Button
+          type="submit"
+          disabled={saving || !formData.title.trim()}
           className="w-full py-3 text-lg"
         >
           {saving ? 'Saving...' : 'Add Task'}

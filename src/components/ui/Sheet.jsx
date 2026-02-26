@@ -5,7 +5,7 @@ import gsap from 'gsap';
 export function Sheet({ isOpen, onClose, title, children, width = '400px' }) {
   const [isMounted, setIsMounted] = useState(isOpen);
   const sheetRef = useRef(null);
-  
+
   // Handle mount/unmount for exit animations
   useEffect(() => {
     if (isOpen) setIsMounted(true);
@@ -17,7 +17,7 @@ export function Sheet({ isOpen, onClose, title, children, width = '400px' }) {
 
     const sheet = sheetRef.current;
     const mainContent = document.getElementById('main-content');
-    
+
     // GSAP Context for cleanup
     let ctx = gsap.context(() => {
       if (isOpen) {
@@ -71,17 +71,17 @@ export function Sheet({ isOpen, onClose, title, children, width = '400px' }) {
   return createPortal(
     <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
       {/* Panel */}
-      <div 
+      <div
         ref={sheetRef}
-        className="absolute top-0 right-0 h-full bg-white shadow-[0_0_40px_-10px_rgba(0,0,0,0.1)] flex flex-col border-l border-gray-200 pointer-events-auto"
-        style={{ width, transform: 'translateX(100%)' }} // Start off-screen
+        className="absolute top-0 right-0 h-full bg-surface-container shadow-elevation-4 flex flex-col border-l border-outline-variant pointer-events-auto"
+        style={{ width, transform: 'translateX(100%)' }}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10">
-          <h2 className="text-lg font-bold text-gray-900 tracking-tight">{title}</h2>
+        <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container/80 backdrop-blur-md sticky top-0 z-10">
+          <h2 className="text-title-lg font-medium text-surface-on tracking-tight">{title}</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 rounded-full hover:bg-surface-container-high text-surface-on-variant hover:text-surface-on transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

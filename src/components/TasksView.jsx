@@ -22,18 +22,12 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { CATEGORIES, CATEGORY_TONES } from '@/lib/categories';
 
 const STATUSES = [
   { id: 'todo', label: 'To Do' },
   { id: 'in_progress', label: 'In Progress' },
   { id: 'done', label: 'Done' },
-];
-
-const CATEGORIES = [
-  { id: 'active', label: 'Active', color: 'bg-green-100 text-green-700', dot: 'bg-green-400' },
-  { id: 'engagement', label: 'Engagement', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
-  { id: 'opportunities', label: 'Opportunities', color: 'bg-orange-100 text-orange-700', dot: 'bg-orange-400' },
-  { id: 'sidequest', label: 'Sidequest', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-400' },
 ];
 
 export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onSelectCategory, onSelectProject }) {
@@ -317,8 +311,8 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-gray-500">Loading...</p>
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-surface-on-variant">Loading...</p>
         </div>
       </div>
     );
@@ -328,8 +322,8 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
     <div className="space-y-6 pb-24 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">
-          All Project Tasks {filteredActive.length > 0 && <span className="text-gray-400 font-normal text-lg">({filteredActive.length})</span>}
+        <h1 className="text-2xl font-bold text-surface-on">
+          All Project Tasks {filteredActive.length > 0 && <span className="text-outline font-normal text-lg">({filteredActive.length})</span>}
         </h1>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => onNavigate('projects')}>+ New Project</Button>
@@ -343,26 +337,29 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
           onClick={() => onSelectCategory?.(null)}
           className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
             !selectedCategory
-              ? 'bg-gray-900 text-white'
-              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              ? 'bg-surface-on text-surface'
+              : 'bg-surface-container-high text-surface-on-variant hover:bg-surface-container-highest'
           }`}
         >
           All
         </button>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => onSelectCategory?.(selectedCategory === cat.id ? null : cat.id)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
-              selectedCategory === cat.id
-                ? cat.color
-                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-            }`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${cat.dot}`} />
-            {cat.label}
-          </button>
-        ))}
+        {CATEGORIES.map(cat => {
+          const tone = CATEGORY_TONES[cat.id];
+          return (
+            <button
+              key={cat.id}
+              onClick={() => onSelectCategory?.(selectedCategory === cat.id ? null : cat.id)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                selectedCategory === cat.id
+                  ? tone.badge
+                  : 'bg-surface-container-high text-surface-on-variant hover:bg-surface-container-highest'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} />
+              {cat.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Filters row */}
@@ -371,7 +368,7 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
         <select
           value={projectFilter}
           onChange={(e) => setProjectFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+          className="px-3 py-2 text-sm border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-surface-container"
         >
           <option value="all">All Projects</option>
           {dropdownProjects.map(p => (
@@ -383,10 +380,10 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
         {/* Done toggle */}
         <button
           onClick={() => setShowCompleted(!showCompleted)}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap inline-flex items-center gap-1.5 ${
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap inline-flex items-center gap-1.5 ${
             showCompleted
               ? 'bg-green-600 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              : 'bg-surface-container-high text-surface-on-variant hover:bg-surface-container-highest'
           }`}
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -408,7 +405,7 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
                 setCollapsedGroups(next);
               }
             }}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors whitespace-nowrap"
+            className="px-3 py-1.5 text-xs font-medium rounded-md bg-surface-container-high text-surface-on-variant hover:bg-surface-container-highest transition-colors whitespace-nowrap"
           >
             {groupedByProject.every(([id]) => collapsedGroups[id]) ? 'Expand All' : 'Collapse All'}
           </button>
@@ -418,13 +415,13 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
         <div className="flex-1" />
 
         {/* View toggle */}
-        <div className="flex bg-gray-100 rounded-lg p-1 flex-shrink-0">
+        <div className="flex bg-surface-container-high rounded-md p-1 flex-shrink-0">
           <button
             onClick={() => setViewMode('list')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               viewMode === 'list'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-surface-container text-surface-on shadow-elevation-1'
+                : 'text-surface-on-variant hover:text-surface-on'
             }`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -435,8 +432,8 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
             onClick={() => setViewMode('board')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               viewMode === 'board'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-surface-container text-surface-on shadow-elevation-1'
+                : 'text-surface-on-variant hover:text-surface-on'
             }`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -451,17 +448,17 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
         <div className="flex items-center justify-between">
           <button
             onClick={selectAll}
-            className="text-xs text-gray-500 hover:text-gray-700 font-medium"
+            className="text-xs text-surface-on-variant hover:text-surface-on font-medium"
           >
             {selectedIds.size === allVisibleIds.length && allVisibleIds.length > 0 ? 'Deselect All' : 'Select All'}
           </button>
 
           {selectionActive && (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">{selectedIds.size} selected</span>
+              <span className="text-xs text-surface-on-variant">{selectedIds.size} selected</span>
               <button
                 onClick={handleBulkComplete}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md bg-green-500/15 text-green-400 hover:bg-green-500/25 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -470,7 +467,7 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -479,7 +476,7 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
               </button>
               <button
                 onClick={clearSelection}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium rounded-md bg-surface-container-high text-surface-on-variant hover:bg-surface-container-highest transition-colors"
               >
                 Cancel
               </button>
@@ -601,7 +598,7 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
           />
 
           {groupedByProject.length === 0 && !showCompleted && focusTasks.length === 0 ? (
-            <Card className="p-8 text-center text-gray-400">
+            <Card className="p-8 text-center text-outline">
               No active tasks
             </Card>
           ) : (
@@ -675,10 +672,10 @@ export function TasksView({ onNavigate, selectedProjectId, selectedCategory, onS
               (() => {
                 const pid = String(activeId).replace('drag-project-', '');
                 return (
-                  <Card className="p-3 shadow-lg ring-2 ring-purple-400/30 bg-white rounded-xl opacity-90">
+                  <Card className="p-3 shadow-elevation-3 ring-2 ring-purple-400/30 bg-surface-container-highest rounded-lg opacity-90">
                     <div className="flex items-center gap-2">
                       <span className="text-purple-400">&#9829;</span>
-                      <span className="text-sm font-semibold text-gray-700">{projectMap[pid] || 'Project'}</span>
+                      <span className="text-sm font-semibold text-surface-on">{projectMap[pid] || 'Project'}</span>
                     </div>
                   </Card>
                 );
@@ -808,34 +805,34 @@ function EditTaskSheet({ task, isOpen, onClose, onSave, onDelete, projects }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Title *</label>
           <input
             type="text"
             value={formData.title || ''}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg"
+            className="w-full px-3 py-3 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-lg"
             required
           />
         </div>
 
         {/* Notes */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Notes</label>
           <textarea
             value={formData.subtitle || ''}
             onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
             rows={2}
           />
         </div>
 
         {/* Project */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Project</label>
           <select
             value={formData.project_id || ''}
             onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-3 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="">No project</option>
             {projects.map(p => (
@@ -846,17 +843,17 @@ function EditTaskSheet({ task, isOpen, onClose, onSave, onDelete, projects }) {
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+          <label className="block text-sm font-medium text-surface-on mb-2">Status</label>
           <div className="flex gap-2">
             {STATUSES.map(s => (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => setFormData({ ...formData, status: s.id })}
-                className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                   formData.status === s.id
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    ? 'bg-surface-on text-surface'
+                    : 'bg-surface-container-high text-surface-on-variant hover:bg-surface-container-highest'
                 }`}
               >
                 {s.label}
@@ -867,33 +864,33 @@ function EditTaskSheet({ task, isOpen, onClose, onSave, onDelete, projects }) {
 
         {/* Due Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Due date</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Due date</label>
           <input
             type="date"
             value={formData.due_date || ''}
             onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-3 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
           />
         </div>
 
         {/* Priority */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+          <label className="block text-sm font-medium text-surface-on mb-2">Priority</label>
           <div className="flex gap-2">
             {[
-              { id: '', label: 'None', color: 'bg-gray-100 text-gray-600' },
-              { id: 'low', label: 'Low', color: 'bg-green-100 text-green-700' },
-              { id: 'medium', label: 'Medium', color: 'bg-amber-100 text-amber-700' },
-              { id: 'high', label: 'High', color: 'bg-red-100 text-red-700' },
+              { id: '', label: 'None', color: 'bg-surface-container-high text-surface-on-variant' },
+              { id: 'low', label: 'Low', color: 'bg-green-500/15 text-green-400' },
+              { id: 'medium', label: 'Medium', color: 'bg-amber-500/15 text-amber-400' },
+              { id: 'high', label: 'High', color: 'bg-red-500/15 text-red-400' },
             ].map(p => (
               <button
                 key={p.id}
                 type="button"
                 onClick={() => setFormData({ ...formData, priority: p.id })}
-                className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                   formData.priority === p.id
-                    ? `${p.color} ring-2 ring-offset-1 ring-gray-400`
-                    : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                    ? `${p.color} ring-2 ring-offset-1 ring-outline`
+                    : 'bg-surface text-outline hover:bg-surface-container-high'
                 }`}
               >
                 {p.label}
@@ -911,7 +908,7 @@ function EditTaskSheet({ task, isOpen, onClose, onSave, onDelete, projects }) {
           <button
             type="button"
             onClick={() => onDelete(task.id)}
-            className="w-full py-2 text-sm text-red-600 hover:text-red-700 font-medium"
+            className="w-full py-2 text-sm text-red-400 hover:text-red-400 font-medium"
           >
             Delete Task
           </button>
@@ -930,11 +927,11 @@ function FocusZone({ tasks, projectMap, onToggleStatus, onDelete, onStatusChange
     return (
       <div
         ref={setNodeRef}
-        className={`rounded-xl border-2 border-dashed p-4 text-center transition-colors ${
-          isOver ? 'border-amber-400 bg-amber-50' : 'border-gray-200'
+        className={`rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
+          isOver ? 'border-amber-400 bg-amber-950/60' : 'border-outline-variant'
         }`}
       >
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-outline">
           <span className="text-amber-400 mr-1">&#9733;</span>
           {isOver ? 'Drop to add to Focus' : 'Star tasks or drag here to focus'}
         </p>
@@ -945,14 +942,14 @@ function FocusZone({ tasks, projectMap, onToggleStatus, onDelete, onStatusChange
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-xl border-2 p-4 transition-colors ${
-        isOver ? 'border-amber-400 bg-amber-50' : 'border-amber-200 bg-amber-50/50'
+      className={`rounded-lg border-2 p-4 transition-colors ${
+        isOver ? 'border-amber-400 bg-amber-950/60' : 'border-amber-500/25 bg-amber-950/40'
       }`}
     >
       <div className="flex items-center gap-2 mb-3">
         <span className="text-amber-400">&#9733;</span>
-        <h3 className="text-sm font-semibold text-gray-700">Focus</h3>
-        <span className="text-xs text-gray-400">({tasks.length})</span>
+        <h3 className="text-sm font-semibold text-surface-on">Focus</h3>
+        <span className="text-xs text-outline">({tasks.length})</span>
       </div>
 
       <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
@@ -982,28 +979,21 @@ function FocusZone({ tasks, projectMap, onToggleStatus, onDelete, onStatusChange
 
 // --- List View Components ---
 
-const CATEGORY_TINTS = {
-  active: 'bg-green-50 border-green-200',
-  engagement: 'bg-amber-50 border-amber-200',
-  opportunities: 'bg-orange-50 border-orange-200',
-  sidequest: 'bg-blue-50 border-blue-200',
-};
-
 function ProjectGroup({ projectId, projectName, tasks, collapsed, onToggleCollapse, onToggleStatus, onDelete, onStatusChange, onEdit, selectedIds, onToggleSelect, selectionActive, onSelectProject, category, onToggleFocus, dragHandleProps, isFavorite, onToggleFavorite }) {
   const isNoProject = projectId === '__none__';
   const visibleTasks = tasks.slice(0, 3);
   const hiddenCount = tasks.length - visibleTasks.length;
-  const tint = !isNoProject && category ? CATEGORY_TINTS[category] : null;
+  const tone = !isNoProject && category ? CATEGORY_TONES[category] : null;
   const { setNodeRef, isOver } = useDroppable({ id: `group-${projectId}` });
 
   return (
-    <div ref={setNodeRef} className={`rounded-xl border p-4 flex flex-col transition-colors ${tint || 'bg-white border-gray-200'} ${isOver ? 'ring-2 ring-primary-400' : ''}`}>
+    <div ref={setNodeRef} className={`rounded-lg border p-4 flex flex-col transition-all shadow-elevation-1 ${tone ? `${tone.card} ${tone.glow}` : 'bg-surface-container-high border-outline-variant'} ${isOver ? 'ring-2 ring-primary' : ''}`}>
       <div className="flex items-center gap-2 mb-2">
         {/* Drag handle for project (shown when draggable) */}
         {dragHandleProps && (
           <button
             {...dragHandleProps}
-            className="flex-shrink-0 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none"
+            className="flex-shrink-0 text-outline hover:text-surface-on-variant cursor-grab active:cursor-grabbing touch-none"
             onClick={(e) => e.stopPropagation()}
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -1018,7 +1008,7 @@ function ProjectGroup({ projectId, projectName, tasks, collapsed, onToggleCollap
         )}
         <button
           onClick={onToggleCollapse}
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+          className="flex-shrink-0 text-outline hover:text-surface-on-variant"
         >
           <svg
             className={`w-4 h-4 transition-transform ${collapsed ? '' : 'rotate-90'}`}
@@ -1031,16 +1021,16 @@ function ProjectGroup({ projectId, projectName, tasks, collapsed, onToggleCollap
           onClick={() => !isNoProject && onSelectProject ? onSelectProject(projectId) : onToggleCollapse()}
           className="flex items-center gap-2 group text-left min-w-0"
         >
-          <h3 className={`text-sm font-semibold truncate ${isNoProject ? 'text-gray-400' : 'text-gray-700'} group-hover:text-gray-900`}>
+          <h3 className={`text-sm font-semibold truncate ${isNoProject ? 'text-outline' : tone ? tone.text : 'text-surface-on'} group-hover:text-surface-on`}>
             {projectName}
           </h3>
-          <span className="text-xs text-gray-400 flex-shrink-0">({tasks.length})</span>
+          <span className="text-xs text-outline flex-shrink-0">({tasks.length})</span>
         </button>
         {/* Favorite toggle */}
         {onToggleFavorite && !isNoProject && (
           <button
             onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
-            className={`flex-shrink-0 ml-auto transition-colors ${isFavorite ? 'text-purple-400 hover:text-purple-500' : 'text-gray-200 hover:text-purple-300'}`}
+            className={`flex-shrink-0 ml-auto transition-colors ${isFavorite ? 'text-purple-400 hover:text-purple-500' : 'text-outline-variant hover:text-purple-300'}`}
             title={isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
@@ -1076,8 +1066,8 @@ function ProjectGroup({ projectId, projectName, tasks, collapsed, onToggleCollap
       )}
 
       {!collapsed && hiddenCount > 0 && (
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <span className="text-xs text-gray-400">+{hiddenCount} more</span>
+        <div className="mt-2 pt-2 border-t border-outline-variant">
+          <span className="text-xs text-outline">+{hiddenCount} more</span>
         </div>
       )}
     </div>
@@ -1092,7 +1082,7 @@ function ProjectsDropZone({ children }) {
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-wrap gap-4 rounded-xl p-1 transition-colors ${isOver ? 'bg-gray-100' : ''}`}
+      className={`flex flex-wrap gap-4 rounded-lg p-1 transition-colors ${isOver ? 'bg-surface-container-high' : ''}`}
     >
       {children}
     </div>
@@ -1122,11 +1112,11 @@ function FavoritesZone({ groups, projectMap, projectCategoryMap, collapsedGroups
     return (
       <div
         ref={setNodeRef}
-        className={`rounded-xl border-2 border-dashed p-4 text-center transition-colors ${
-          isOver ? 'border-purple-400 bg-purple-50' : 'border-gray-200'
+        className={`rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
+          isOver ? 'border-purple-400 bg-purple-950/60' : 'border-outline-variant'
         }`}
       >
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-outline">
           <span className="mr-1">&#9829;</span>
           {isOver ? 'Drop to add to Favorites' : 'Drag projects here to favorite'}
         </p>
@@ -1137,14 +1127,14 @@ function FavoritesZone({ groups, projectMap, projectCategoryMap, collapsedGroups
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-xl border-2 p-4 transition-colors ${
-        isOver ? 'border-purple-400 bg-purple-50' : 'border-purple-200 bg-purple-50/50'
+      className={`rounded-lg border-2 p-4 transition-colors ${
+        isOver ? 'border-purple-400 bg-purple-950/60' : 'border-purple-500/25 bg-purple-950/40'
       }`}
     >
       <div className="flex items-center gap-2 mb-3">
         <span className="text-purple-400">&#9829;</span>
-        <h3 className="text-sm font-semibold text-gray-700">Favorites</h3>
-        <span className="text-xs text-gray-400">({groups.length})</span>
+        <h3 className="text-sm font-semibold text-surface-on">Favorites</h3>
+        <span className="text-xs text-outline">({groups.length})</span>
       </div>
 
       <div className="flex flex-wrap gap-4">
@@ -1204,8 +1194,8 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
   const isSelected = selectedIds?.has(task.id);
 
   const borderColor = isDone ? 'border-l-transparent' :
-    task.priority === 'high' ? 'border-l-red-500' :
-    task.priority === 'medium' ? 'border-l-amber-400' :
+    task.priority === 'high' ? 'border-l-red-500/40' :
+    task.priority === 'medium' ? 'border-l-amber-400/40' :
     'border-l-transparent';
 
   const days = task.due_date ? daysUntil(task.due_date) : null;
@@ -1222,9 +1212,9 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
 
   return (
     <Card
-      className={`p-3 border-l-[3px] ${borderColor} cursor-pointer transition-all ${isDone ? 'bg-gray-50' : ''} ${
-        isSelected ? 'ring-2 ring-primary-500 bg-primary-50' : ''
-      } ${isDragOverlay ? 'shadow-lg ring-2 ring-primary-500/30 bg-white' : ''}`}
+      className={`p-3 border-l-2 ${borderColor} cursor-pointer transition-all bg-transparent ${isDone ? '!bg-surface opacity-60' : ''} ${
+        isSelected ? 'ring-2 ring-primary !bg-primary-container' : ''
+      } ${isDragOverlay ? 'shadow-elevation-3 ring-2 ring-primary/30 !bg-surface-container-highest' : ''}`}
       onClick={handleClick}
     >
       <div className="flex items-start gap-3">
@@ -1232,7 +1222,7 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
         {dragHandleProps && !selectionActive && (
           <button
             {...dragHandleProps}
-            className="mt-0.5 flex-shrink-0 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none"
+            className="mt-0.5 flex-shrink-0 text-outline hover:text-surface-on-variant cursor-grab active:cursor-grabbing touch-none"
             onClick={(e) => e.stopPropagation()}
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -1252,8 +1242,8 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
             onClick={(e) => { e.stopPropagation(); onToggleSelect(task.id); }}
             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors mt-0.5 flex-shrink-0 ${
               isSelected
-                ? 'bg-primary-500 border-primary-500 text-white'
-                : 'border-gray-300 hover:border-gray-400'
+                ? 'bg-primary border-primary text-primary-on'
+                : 'border-outline hover:border-outline'
             }`}
           >
             {isSelected && (
@@ -1267,15 +1257,15 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
         {/* Content */}
         <div className="flex-1 min-w-0">
           {showProject && projectName && (
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-0.5">
+            <p className="text-[16px] font-medium text-outline uppercase tracking-wide mb-0.5">
               {projectName}
             </p>
           )}
-          <span className={`text-sm ${isDone ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+          <span className={`text-sm ${isDone ? 'line-through text-outline' : 'text-surface-on'}`}>
             {task.title}
           </span>
           {task.subtitle && !isDone && (
-            <p className="text-xs text-gray-500 mt-0.5 truncate">{task.subtitle}</p>
+            <p className="text-xs text-surface-on-variant mt-0.5 truncate">{task.subtitle}</p>
           )}
         </div>
 
@@ -1283,7 +1273,7 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
         {onToggleFocus && !selectionActive && !isDragOverlay && (
           <button
             onClick={(e) => { e.stopPropagation(); onToggleFocus(); }}
-            className={`flex-shrink-0 mt-0.5 transition-colors ${task.is_focus ? 'text-amber-400 hover:text-amber-500' : 'text-gray-200 hover:text-amber-300'}`}
+            className={`flex-shrink-0 mt-0.5 transition-colors ${task.is_focus ? 'text-amber-400 hover:text-amber-500' : 'text-outline-variant hover:text-amber-300'}`}
             title={task.is_focus ? 'Remove from Focus' : 'Add to Focus'}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill={task.is_focus ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
@@ -1295,9 +1285,9 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
         {/* Due date */}
         {!compact && task.due_date && (
           <span className={`text-xs flex-shrink-0 mt-1 ${
-            isOverdue ? 'text-red-600 font-medium' :
-            isToday ? 'text-amber-600 font-medium' :
-            'text-gray-400'
+            isOverdue ? 'text-red-400 font-medium' :
+            isToday ? 'text-amber-400 font-medium' :
+            'text-outline'
           }`}>
             {isOverdue ? `${Math.abs(days)}d overdue` :
              isToday ? 'Today' :
@@ -1321,7 +1311,7 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
         {focusMode && onEdit && !selectionActive && !isDragOverlay && (
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="flex-shrink-0 p-1 text-gray-300 hover:text-primary-500 transition-colors"
+            className="flex-shrink-0 p-1 text-outline hover:text-primary transition-colors"
             title="Edit task"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1333,18 +1323,18 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
 
       {/* Expanded actions */}
       {showActions && !selectionActive && (
-        <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-end gap-2">
+        <div className="mt-2 pt-2 border-t border-outline-variant flex items-center justify-end gap-2">
           {onEdit && (
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+              className="text-xs text-primary hover:text-primary font-medium"
             >
               Edit
             </button>
           )}
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="text-xs text-red-600 hover:text-red-700"
+            className="text-xs text-red-400 hover:text-red-400"
           >
             Delete
           </button>
@@ -1354,19 +1344,19 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
   );
 }
 
-// --- Status Button (cycles: todo → wip → done → todo) ---
+// --- Status Button (cycles: todo -> wip -> done -> todo) ---
 
 const STATUS_CYCLE = [
-  { id: 'todo', label: 'To Do', shortLabel: 'To Do', bg: 'bg-gray-100', text: 'text-gray-600', ring: '' },
-  { id: 'in_progress', label: 'In Progress', shortLabel: 'WIP', bg: 'bg-blue-100', text: 'text-blue-700', ring: 'ring-blue-200' },
-  { id: 'done', label: 'Done', shortLabel: 'Done', bg: 'bg-green-100', text: 'text-green-700', ring: 'ring-green-200' },
+  { id: 'todo', label: 'To Do', shortLabel: 'To Do', bg: 'bg-surface-container-high', text: 'text-surface-on-variant', ring: '' },
+  { id: 'in_progress', label: 'In Progress', shortLabel: 'WIP', bg: 'bg-blue-500/15', text: 'text-blue-400', ring: 'ring-blue-500/25' },
+  { id: 'done', label: 'Done', shortLabel: 'Done', bg: 'bg-green-500/15', text: 'text-green-400', ring: 'ring-green-500/25' },
 ];
 
-// Focus mode: todo→Start (sets in_progress), in_progress→Done (sets done)
+// Focus mode: todo->Start (sets in_progress), in_progress->Done (sets done)
 const FOCUS_STATUS_CYCLE = [
-  { id: 'todo', label: 'Start', shortLabel: 'Start', bg: 'bg-amber-100', text: 'text-amber-700', ring: 'ring-amber-200', nextId: 'in_progress' },
-  { id: 'in_progress', label: 'Done', shortLabel: 'Done', bg: 'bg-blue-100', text: 'text-blue-700', ring: 'ring-blue-200', nextId: 'done' },
-  { id: 'done', label: 'Reopen', shortLabel: 'Done', bg: 'bg-green-100', text: 'text-green-700', ring: 'ring-green-200', nextId: 'todo' },
+  { id: 'todo', label: 'Start', shortLabel: 'Start', bg: 'bg-amber-500/15', text: 'text-amber-400', ring: 'ring-amber-500/25', nextId: 'in_progress' },
+  { id: 'in_progress', label: 'Done', shortLabel: 'Done', bg: 'bg-blue-500/15', text: 'text-blue-400', ring: 'ring-blue-500/25', nextId: 'done' },
+  { id: 'done', label: 'Reopen', shortLabel: 'Done', bg: 'bg-green-500/15', text: 'text-green-400', ring: 'ring-green-500/25', nextId: 'todo' },
 ];
 
 function StatusButton({ status, onStatusChange, focusMode }) {
@@ -1392,7 +1382,7 @@ function StatusButton({ status, onStatusChange, focusMode }) {
     <button
       onClick={handleClick}
       title={focusMode ? `Click to ${current.label}` : `Click to set ${next.label}`}
-      className={`px-2.5 py-1 text-[11px] font-semibold rounded-md flex-shrink-0 transition-all ${current.bg} ${current.text} hover:ring-2 ${current.ring || 'ring-gray-200'}`}
+      className={`px-2.5 py-1 text-[16px] font-semibold rounded-md flex-shrink-0 transition-all ${current.bg} ${current.text} hover:ring-2 ${current.ring || 'ring-outline-variant'}`}
     >
       {current.id === 'done' && (
         <svg className="w-3 h-3 inline mr-0.5 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1413,7 +1403,7 @@ function BoardColumn({ column, projectMap, onToggleStatus, onDelete, onEdit }) {
   });
 
   const columnColors = {
-    todo: 'border-t-gray-400',
+    todo: 'border-t-outline',
     in_progress: 'border-t-blue-500',
     done: 'border-t-green-500',
   };
@@ -1421,11 +1411,11 @@ function BoardColumn({ column, projectMap, onToggleStatus, onDelete, onEdit }) {
   return (
     <div
       ref={setNodeRef}
-      className={`bg-gray-50 rounded-xl border-t-[3px] ${columnColors[column.id]} p-3 flex flex-col min-h-[200px]`}
+      className={`bg-surface rounded-lg border-t-[3px] ${columnColors[column.id]} p-3 flex flex-col min-h-[200px]`}
     >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-700">{column.label}</h3>
-        <span className="text-xs text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
+        <h3 className="text-sm font-semibold text-surface-on">{column.label}</h3>
+        <span className="text-xs text-outline bg-surface-container-highest px-2 py-0.5 rounded-full">
           {column.tasks.length}
         </span>
       </div>
@@ -1438,7 +1428,7 @@ function BoardColumn({ column, projectMap, onToggleStatus, onDelete, onEdit }) {
           {column.groups.map(([projectId, projectTasks]) => (
             <div key={projectId}>
               {column.groups.length > 1 && (
-                <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1 px-1">
+                <p className="text-[15px] font-medium text-outline uppercase tracking-wider mb-1 px-1">
                   {projectId === '__none__' ? 'No Project' : projectMap[projectId] || 'Unknown'}
                 </p>
               )}
@@ -1456,7 +1446,7 @@ function BoardColumn({ column, projectMap, onToggleStatus, onDelete, onEdit }) {
           ))}
 
           {column.tasks.length === 0 && (
-            <div className="flex-1 flex items-center justify-center text-sm text-gray-300 py-8">
+            <div className="flex-1 flex items-center justify-center text-sm text-outline py-8">
               Drop here
             </div>
           )}
@@ -1508,29 +1498,29 @@ function BoardCard({ task, projectName, isDragging, onToggleStatus, onDelete, on
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-3 mb-2 ${
-      isDragging ? 'shadow-lg ring-2 ring-primary-500/30' : 'shadow-sm hover:shadow-md'
+    <div className={`bg-surface-container-highest rounded-md border border-outline-variant p-3 mb-2 ${
+      isDragging ? 'shadow-elevation-3 ring-2 ring-primary/30' : 'shadow-elevation-1 hover:shadow-elevation-2'
     } transition-shadow cursor-grab active:cursor-grabbing`}>
       <div className="flex items-start gap-2">
         {task.priority && (
           <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${priorityDot[task.priority] || ''}`} />
         )}
         <div className="flex-1 min-w-0">
-          <p className={`text-sm ${isDone ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+          <p className={`text-sm ${isDone ? 'line-through text-outline' : 'text-surface-on'}`}>
             {task.title}
           </p>
           {projectName && (
-            <p className="text-[10px] text-gray-400 mt-0.5">{projectName}</p>
+            <p className="text-[15px] text-outline mt-0.5">{projectName}</p>
           )}
         </div>
       </div>
 
       <div className="flex items-center justify-between mt-2">
         {task.due_date ? (
-          <span className={`text-[10px] font-medium ${
-            isOverdue ? 'text-red-600' :
-            isToday ? 'text-amber-600' :
-            'text-gray-400'
+          <span className={`text-[15px] font-medium ${
+            isOverdue ? 'text-red-400' :
+            isToday ? 'text-amber-400' :
+            'text-outline'
           }`}>
             {isOverdue ? `${Math.abs(days)}d overdue` :
              isToday ? 'Today' :
@@ -1542,7 +1532,7 @@ function BoardCard({ task, projectName, isDragging, onToggleStatus, onDelete, on
           {onEdit && (
             <button
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); onEdit(); }}
-              className="text-gray-400 hover:text-primary-600"
+              className="text-outline hover:text-primary"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -1555,7 +1545,7 @@ function BoardCard({ task, projectName, isDragging, onToggleStatus, onDelete, on
               className={`w-4 h-4 rounded border flex items-center justify-center ${
                 isDone
                   ? 'bg-green-500 border-green-500 text-white'
-                  : 'border-gray-300 hover:border-gray-400'
+                  : 'border-outline hover:border-outline'
               }`}
             >
               {isDone && (

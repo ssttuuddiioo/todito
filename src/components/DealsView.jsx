@@ -7,11 +7,11 @@ import { Sheet } from '@/components/ui/Sheet';
 import { formatCurrency, formatDate, daysUntil } from '@/lib/utils';
 
 const STAGES = [
-  { id: 'lead', label: 'Lead', color: 'bg-blue-500', light: 'bg-blue-50 text-blue-700' },
-  { id: 'proposal', label: 'Proposal', color: 'bg-purple-500', light: 'bg-purple-50 text-purple-700' },
-  { id: 'negotiation', label: 'Negotiation', color: 'bg-amber-500', light: 'bg-amber-50 text-amber-700' },
-  { id: 'won', label: 'Won', color: 'bg-green-500', light: 'bg-green-50 text-green-700' },
-  { id: 'lost', label: 'Lost', color: 'bg-gray-400', light: 'bg-gray-100 text-gray-500' },
+  { id: 'lead', label: 'Lead', color: 'bg-blue-500', light: 'bg-blue-500/10 text-blue-400' },
+  { id: 'proposal', label: 'Proposal', color: 'bg-purple-500', light: 'bg-purple-500/10 text-purple-400' },
+  { id: 'negotiation', label: 'Negotiation', color: 'bg-amber-500', light: 'bg-amber-500/10 text-amber-400' },
+  { id: 'won', label: 'Won', color: 'bg-green-500', light: 'bg-green-500/10 text-green-400' },
+  { id: 'lost', label: 'Lost', color: 'bg-outline', light: 'bg-surface-container-high text-surface-on-variant' },
 ];
 
 function getContactName(deal, people) {
@@ -93,7 +93,7 @@ export function DealsView({ onNavigate }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -103,14 +103,14 @@ export function DealsView({ onNavigate }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Deals</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Pipeline: <span className="font-semibold text-gray-700">{formatCurrency(pipelineValue)}</span>
+          <h1 className="text-2xl font-bold text-surface-on">Deals</h1>
+          <p className="text-sm text-surface-on-variant mt-1">
+            Pipeline: <span className="font-semibold text-surface-on">{formatCurrency(pipelineValue)}</span>
           </p>
         </div>
         <button
           onClick={() => setShowNewDeal(true)}
-          className="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors"
+          className="px-4 py-2 bg-primary text-primary-on rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
         >
           + New Deal
         </button>
@@ -127,11 +127,11 @@ export function DealsView({ onNavigate }) {
               <div className="flex items-center justify-between mb-3 px-1">
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${stage.color}`} />
-                  <span className="text-sm font-semibold text-gray-700">{stage.label}</span>
-                  <span className="text-xs text-gray-400">{deals.length}</span>
+                  <span className="text-sm font-semibold text-surface-on">{stage.label}</span>
+                  <span className="text-xs text-outline">{deals.length}</span>
                 </div>
                 {stageTotal > 0 && (
-                  <span className="text-xs text-gray-400">{formatCurrency(stageTotal)}</span>
+                  <span className="text-xs text-outline">{formatCurrency(stageTotal)}</span>
                 )}
               </div>
               {/* Cards */}
@@ -145,7 +145,7 @@ export function DealsView({ onNavigate }) {
                   />
                 ))}
                 {deals.length === 0 && (
-                  <div className="text-center py-8 text-gray-300 text-xs">No deals</div>
+                  <div className="text-center py-8 text-outline text-xs">No deals</div>
                 )}
               </div>
             </div>
@@ -157,7 +157,7 @@ export function DealsView({ onNavigate }) {
       <div>
         <button
           onClick={() => setShowClosed(!showClosed)}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          className="flex items-center gap-2 text-sm text-outline hover:text-surface-on-variant transition-colors"
         >
           <svg className={`w-4 h-4 transition-transform ${showClosed ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -172,8 +172,8 @@ export function DealsView({ onNavigate }) {
                 <div key={stage.id} className="flex-1">
                   <div className="flex items-center gap-2 mb-2 px-1">
                     <div className={`w-2 h-2 rounded-full ${stage.color}`} />
-                    <span className="text-sm font-semibold text-gray-500">{stage.label}</span>
-                    <span className="text-xs text-gray-400">{deals.length}</span>
+                    <span className="text-sm font-semibold text-surface-on-variant">{stage.label}</span>
+                    <span className="text-xs text-outline">{deals.length}</span>
                   </div>
                   <div className="space-y-2">
                     {deals.map(deal => (
@@ -220,34 +220,34 @@ export function DealsView({ onNavigate }) {
       <Sheet isOpen={showNewDeal} onClose={() => setShowNewDeal(false)} title="New Deal">
         <form onSubmit={handleCreateDeal} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Deal Name *</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Deal Name *</label>
             <input
               type="text"
               value={newDeal.title}
               onChange={(e) => setNewDeal(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="e.g., Website redesign for Acme"
               autoFocus
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Value</label>
             <input
               type="number"
               step="0.01"
               min="0"
               value={newDeal.value}
               onChange={(e) => setNewDeal(prev => ({ ...prev, value: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="0.00"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Contact</label>
             <select
               value={newDeal.contact_id}
               onChange={(e) => setNewDeal(prev => ({ ...prev, contact_id: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
             >
               <option value="">None</option>
               {people.map(p => (
@@ -256,11 +256,11 @@ export function DealsView({ onNavigate }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Stage</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Stage</label>
             <select
               value={newDeal.stage}
               onChange={(e) => setNewDeal(prev => ({ ...prev, stage: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
             >
               {STAGES.filter(s => s.id !== 'won' && s.id !== 'lost').map(s => (
                 <option key={s.id} value={s.id}>{s.label}</option>
@@ -268,30 +268,30 @@ export function DealsView({ onNavigate }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Next Action</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Next Action</label>
             <input
               type="text"
               value={newDeal.next_action}
               onChange={(e) => setNewDeal(prev => ({ ...prev, next_action: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="e.g., Send proposal by Friday"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Expected Close</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Expected Close</label>
             <input
               type="date"
               value={newDeal.expected_close}
               onChange={(e) => setNewDeal(prev => ({ ...prev, expected_close: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-surface-on mb-1">Notes</label>
             <textarea
               value={newDeal.notes}
               onChange={(e) => setNewDeal(prev => ({ ...prev, notes: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
               rows={3}
               placeholder="Additional context..."
             />
@@ -299,7 +299,7 @@ export function DealsView({ onNavigate }) {
           <button
             type="submit"
             disabled={!newDeal.title.trim()}
-            className="w-full py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2 bg-primary text-primary-on rounded-md font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Create Deal
           </button>
@@ -317,25 +317,25 @@ function DealCard({ deal, people, onClick, muted = false }) {
 
   return (
     <Card
-      className={`p-3 cursor-pointer hover:shadow-md transition-shadow ${muted ? 'opacity-60' : ''}`}
+      className={`p-3 cursor-pointer hover:shadow-elevation-1 transition-shadow ${muted ? 'opacity-60' : ''}`}
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-1">
-        <h3 className="text-sm font-semibold text-gray-900 leading-tight">{deal.title}</h3>
+        <h3 className="text-sm font-semibold text-surface-on leading-tight">{deal.title}</h3>
         {deal.value > 0 && (
-          <span className="text-sm font-semibold text-gray-700 ml-2 flex-shrink-0">
+          <span className="text-sm font-semibold text-surface-on ml-2 flex-shrink-0">
             {formatCurrency(deal.value)}
           </span>
         )}
       </div>
       {contactName && (
-        <p className="text-xs text-gray-400 mb-1">{contactName}</p>
+        <p className="text-xs text-outline mb-1">{contactName}</p>
       )}
       {deal.next_action && (
-        <p className="text-xs text-gray-500 mb-1 truncate">{deal.next_action}</p>
+        <p className="text-xs text-surface-on-variant mb-1 truncate">{deal.next_action}</p>
       )}
       {closeDate && (
-        <p className={`text-xs ${isOverdue ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+        <p className={`text-xs ${isOverdue ? 'text-red-500 font-medium' : 'text-outline'}`}>
           {isOverdue ? `${Math.abs(days)}d overdue` : days === 0 ? 'Today' : `${days}d`}
         </p>
       )}
@@ -356,30 +356,30 @@ function DealDetail({ deal, people, editMode, editData, onEdit, onEditChange, on
     return (
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Deal Name</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Deal Name</label>
           <input
             type="text"
             value={editData.title || ''}
             onChange={(e) => onEditChange('title', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Value</label>
           <input
             type="number"
             step="0.01"
             value={editData.value || ''}
             onChange={(e) => onEditChange('value', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Contact</label>
           <select
             value={editData.contact_id || ''}
             onChange={(e) => onEditChange('contact_id', e.target.value || null)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
           >
             <option value="">None</option>
             {people.map(p => (
@@ -388,35 +388,35 @@ function DealDetail({ deal, people, editMode, editData, onEdit, onEditChange, on
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Next Action</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Next Action</label>
           <input
             type="text"
             value={editData.next_action || ''}
             onChange={(e) => onEditChange('next_action', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Expected Close</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Expected Close</label>
           <input
             type="date"
             value={editData.expected_close || ''}
             onChange={(e) => onEditChange('expected_close', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+          <label className="block text-sm font-medium text-surface-on mb-1">Notes</label>
           <textarea
             value={editData.notes || ''}
             onChange={(e) => onEditChange('notes', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-outline rounded-md focus:ring-2 focus:ring-primary"
             rows={3}
           />
         </div>
         <div className="flex gap-2">
-          <button onClick={onSave} className="flex-1 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600">Save</button>
-          <button onClick={onCancel} className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200">Cancel</button>
+          <button onClick={onSave} className="flex-1 py-2 bg-primary text-primary-on rounded-md font-medium hover:bg-primary/90">Save</button>
+          <button onClick={onCancel} className="flex-1 py-2 bg-surface-container-high text-surface-on rounded-md font-medium hover:bg-surface-container-highest">Cancel</button>
         </div>
       </div>
     );
@@ -427,9 +427,9 @@ function DealDetail({ deal, people, editMode, editData, onEdit, onEditChange, on
       {/* Value + Stage */}
       <div className="flex items-center justify-between">
         {deal.value > 0 && (
-          <span className="text-2xl font-bold text-gray-900">{formatCurrency(deal.value)}</span>
+          <span className="text-2xl font-bold text-surface-on">{formatCurrency(deal.value)}</span>
         )}
-        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${stageInfo?.light || 'bg-gray-100 text-gray-600'}`}>
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${stageInfo?.light || 'bg-surface-container-high text-surface-on-variant'}`}>
           {stageInfo?.label || deal.stage}
         </span>
       </div>
@@ -437,48 +437,48 @@ function DealDetail({ deal, people, editMode, editData, onEdit, onEditChange, on
       {/* Contact */}
       {contactName && (
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Contact</p>
-          <p className="text-sm text-gray-700">{contactName}</p>
+          <p className="text-xs text-outline uppercase tracking-wider mb-1">Contact</p>
+          <p className="text-sm text-surface-on">{contactName}</p>
         </div>
       )}
 
       {/* Next Action */}
       {deal.next_action && (
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Next Action</p>
-          <p className="text-sm text-gray-700">{deal.next_action}</p>
+          <p className="text-xs text-outline uppercase tracking-wider mb-1">Next Action</p>
+          <p className="text-sm text-surface-on">{deal.next_action}</p>
         </div>
       )}
 
       {/* Expected Close */}
       {deal.expected_close && (
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Expected Close</p>
-          <p className="text-sm text-gray-700">{formatDate(deal.expected_close)}</p>
+          <p className="text-xs text-outline uppercase tracking-wider mb-1">Expected Close</p>
+          <p className="text-sm text-surface-on">{formatDate(deal.expected_close)}</p>
         </div>
       )}
 
       {/* Notes */}
       {deal.notes && (
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Notes</p>
-          <p className="text-sm text-gray-600 whitespace-pre-wrap">{deal.notes}</p>
+          <p className="text-xs text-outline uppercase tracking-wider mb-1">Notes</p>
+          <p className="text-sm text-surface-on-variant whitespace-pre-wrap">{deal.notes}</p>
         </div>
       )}
 
       {/* Stage Progression */}
       {!isClosed && (
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Move to</p>
+          <p className="text-xs text-outline uppercase tracking-wider mb-2">Move to</p>
           <div className="flex flex-wrap gap-2">
             {STAGES.filter(s => s.id !== deal.stage).map(s => (
               <button
                 key={s.id}
                 onClick={() => onStageChange(s.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors
-                  ${s.id === 'won' ? 'border-green-300 text-green-700 hover:bg-green-50' :
-                    s.id === 'lost' ? 'border-gray-300 text-gray-500 hover:bg-gray-50' :
-                    'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors
+                  ${s.id === 'won' ? 'border-green-500/30 text-green-400 hover:bg-green-500/10' :
+                    s.id === 'lost' ? 'border-outline text-surface-on-variant hover:bg-surface-container-low' :
+                    'border-outline-variant text-surface-on-variant hover:bg-surface-container-low'}`}
               >
                 {s.label}
               </button>
@@ -491,7 +491,7 @@ function DealDetail({ deal, people, editMode, editData, onEdit, onEditChange, on
       {isWon && !deal.project_id && (
         <button
           onClick={onCreateProject}
-          className="w-full py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
+          className="w-full py-2 bg-green-500 text-white rounded-md text-sm font-medium hover:bg-green-600 transition-colors"
         >
           Create Project from Deal
         </button>
@@ -501,18 +501,18 @@ function DealDetail({ deal, people, editMode, editData, onEdit, onEditChange, on
       {deal.project_id && (
         <button
           onClick={() => onNavigate?.('projects')}
-          className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+          className="w-full py-2 bg-surface-container-high text-surface-on rounded-md text-sm font-medium hover:bg-surface-container-highest transition-colors"
         >
           View Linked Project
         </button>
       )}
 
       {/* Actions */}
-      <div className="flex gap-2 pt-3 border-t border-gray-100">
-        <button onClick={onEdit} className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
+      <div className="flex gap-2 pt-3 border-t border-outline-variant">
+        <button onClick={onEdit} className="flex-1 py-2 bg-surface-container-high text-surface-on rounded-md text-sm font-medium hover:bg-surface-container-highest">
           Edit
         </button>
-        <button onClick={onDelete} className="py-2 px-4 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors">
+        <button onClick={onDelete} className="py-2 px-4 text-red-500 hover:bg-red-500/10 rounded-md text-sm font-medium transition-colors">
           Delete
         </button>
       </div>

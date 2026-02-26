@@ -7,7 +7,7 @@ import { useProjects } from '@/hooks/useProjects';
 export function QuickAdd() {
   const [isOpen, setIsOpen] = useState(false);
   const [type, setType] = useState('opportunity');
-  
+
   const { addOpportunity } = useOpportunities();
   const { addProject } = useProjects();
 
@@ -66,10 +66,10 @@ export function QuickAdd() {
               <button
                 type="button"
                 onClick={() => setType('opportunity')}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex-1 px-4 py-2 rounded-full font-medium transition-colors ${
                   type === 'opportunity'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-200 text-gray-700'
+                    ? 'bg-primary text-primary-on'
+                    : 'bg-surface-container-highest text-surface-on'
                 }`}
               >
                 🎯 Opportunity
@@ -77,10 +77,10 @@ export function QuickAdd() {
               <button
                 type="button"
                 onClick={() => setType('project')}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex-1 px-4 py-2 rounded-full font-medium transition-colors ${
                   type === 'project'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-200 text-gray-700'
+                    ? 'bg-primary text-primary-on'
+                    : 'bg-surface-container-highest text-surface-on'
                 }`}
               >
                 📁 Project
@@ -181,4 +181,3 @@ export function QuickAdd() {
     </>
   );
 }
-
