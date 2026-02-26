@@ -1,4 +1,4 @@
-import { useTasks } from '@/hooks/useTasks';
+import { useTasks } from '@/contexts/TasksContext';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { formatDate } from '@/lib/utils';

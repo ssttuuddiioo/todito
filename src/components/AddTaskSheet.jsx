@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useTasks } from '@/hooks/useTasks';
-import { useProjects } from '@/hooks/useProjects';
+import { useTasks } from '@/contexts/TasksContext';
+import { useProjects } from '@/contexts/ProjectsContext';
 import { Sheet } from '@/components/ui/Sheet';
 import { Button } from '@/components/ui/Button';
 

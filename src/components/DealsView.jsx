@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useOpportunities } from '@/hooks/useOpportunities';
-import { usePeople } from '@/hooks/usePeople';
-import { useProjects } from '@/hooks/useProjects';
+import { usePeople } from '@/contexts/PeopleContext';
+import { useProjects } from '@/contexts/ProjectsContext';
 import { Card } from '@/components/ui/Card';
 import { Sheet } from '@/components/ui/Sheet';
 import { formatCurrency, formatDate, daysUntil } from '@/lib/utils';

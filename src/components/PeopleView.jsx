@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { usePeople } from '@/hooks/usePeople';
+import { usePeople } from '@/contexts/PeopleContext';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';

@@ -14,11 +14,18 @@ import { Navigation } from '@/components/Navigation';
 import { QuickActionFAB } from '@/components/QuickActionFAB';
 import { AddExpenseSheet } from '@/components/AddExpenseSheet';
 import { AddIncomeSheet } from '@/components/AddIncomeSheet';
+import { TasksProvider } from '@/contexts/TasksContext';
+import { ProjectsProvider } from '@/contexts/ProjectsContext';
+import { TransactionsProvider } from '@/contexts/TransactionsContext';
+import { PeopleProvider } from '@/contexts/PeopleContext';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState(() => {
+    const hash = window.location.hash.slice(1);
+    return hash || 'dashboard';
+  });
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showExpenseSheet, setShowExpenseSheet] = useState(false);
@@ -151,45 +158,53 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-surface">
-      <Navigation
-        currentView={currentView}
-        onNavigate={handleNavigate}
-        onLogout={handleLogout}
-        user={user}
-        selectedProjectId={selectedProjectId}
-        selectedCategory={selectedCategory}
-        onSelectProject={(projectId) => {
-          setSelectedProjectId(projectId);
-          setSelectedCategory(null);
-          setCurrentView('tasks');
-        }}
-        onSelectCategory={(category) => {
-          setSelectedCategory(category);
-          setSelectedProjectId(null);
-          setCurrentView('tasks');
-        }}
-      />
+    <TasksProvider>
+    <ProjectsProvider>
+    <TransactionsProvider>
+    <PeopleProvider>
+      <div className="min-h-screen bg-surface">
+        <Navigation
+          currentView={currentView}
+          onNavigate={handleNavigate}
+          onLogout={handleLogout}
+          user={user}
+          selectedProjectId={selectedProjectId}
+          selectedCategory={selectedCategory}
+          onSelectProject={(projectId) => {
+            setSelectedProjectId(projectId);
+            setSelectedCategory(null);
+            setCurrentView('tasks');
+          }}
+          onSelectCategory={(category) => {
+            setSelectedCategory(category);
+            setSelectedProjectId(null);
+            setCurrentView('tasks');
+          }}
+        />
 
-      {/* Main content area */}
-      <div className="md:pl-64 transition-all duration-200" id="main-content">
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-8">
-          {renderView()}
-        </main>
+        {/* Main content area */}
+        <div className="md:pl-64 transition-all duration-200" id="main-content">
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-8">
+            {renderView()}
+          </main>
+        </div>
+
+        {/* Quick Action FAB */}
+        <QuickActionFAB />
+
+        {/* Sheets triggered from MoneyView */}
+        <AddExpenseSheet
+          isOpen={showExpenseSheet}
+          onClose={() => setShowExpenseSheet(false)}
+        />
+        <AddIncomeSheet
+          isOpen={showIncomeSheet}
+          onClose={() => setShowIncomeSheet(false)}
+        />
       </div>
-
-      {/* Quick Action FAB */}
-      <QuickActionFAB />
-
-      {/* Sheets triggered from MoneyView */}
-      <AddExpenseSheet
-        isOpen={showExpenseSheet}
-        onClose={() => setShowExpenseSheet(false)}
-      />
-      <AddIncomeSheet
-        isOpen={showIncomeSheet}
-        onClose={() => setShowIncomeSheet(false)}
-      />
-    </div>
+    </PeopleProvider>
+    </TransactionsProvider>
+    </ProjectsProvider>
+    </TasksProvider>
   );
 }

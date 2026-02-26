@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useProjects } from '@/hooks/useProjects';
-import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/contexts/ProjectsContext';
+import { useTasks } from '@/contexts/TasksContext';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { useInvoices } from '@/hooks/useInvoices';
 import { Card } from '@/components/ui/Card';

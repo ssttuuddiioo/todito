@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
-import { useProjects } from '@/hooks/useProjects';
-import { useTransactions } from '@/hooks/useTransactions';
-import { usePeople } from '@/hooks/usePeople';
-import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/contexts/ProjectsContext';
+import { useTransactions } from '@/contexts/TransactionsContext';
+import { usePeople } from '@/contexts/PeopleContext';
+import { useTasks } from '@/contexts/TasksContext';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
@@ -10,6 +10,25 @@ import { AddExpenseSheet } from '@/components/AddExpenseSheet';
 import { AddIncomeSheet } from '@/components/AddIncomeSheet';
 import { isStructuredFormat, parseStructuredNotes, normalizeWithLLM, parseForNewProject, summarizeProject } from '@/lib/note-parser';
 import { formatCurrency, formatDate, daysUntil } from '@/lib/utils';
+import { KanbanCard } from '@/components/KanbanCard';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+  rectIntersection,
+  useDroppable,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 export function ProjectsV2({ onNavigate, initialProjectId, initialTab, onBack: onBackProp }) {
   const [selectedProjectId, setSelectedProjectId] = useState(initialProjectId || null);
@@ -1423,12 +1442,155 @@ function PeopleTab({ people, interactions, projectId }) {
   );
 }
 
+const KANBAN_STATUSES = [
+  { id: 'todo', label: 'To Do' },
+  { id: 'in_progress', label: 'In Progress' },
+  { id: 'done', label: 'Done' },
+];
+
+// Custom collision: prefer task hits (so cards slide apart), fall back to column for empty areas
+function kanbanCollision(args) {
+  const collisions = closestCorners(args);
+  // If we hit a task, use it so SortableContext can animate the gap
+  const taskHit = collisions.find(
+    c => typeof c.id !== 'string' || !c.id.startsWith('column-')
+  );
+  if (taskHit) return [taskHit];
+  // Fall back to column (empty column drop zones)
+  return collisions;
+}
+
 function TasksTab({ tasks, projectId }) {
   const { addTask, updateTask, deleteTask } = useTasks();
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDueDate, setNewTaskDueDate] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState('');
   const [adding, setAdding] = useState(false);
+  const [activeId, setActiveId] = useState(null);
+  // Temporary column assignments during drag (null when not dragging)
+  const [kanbanItems, setKanbanItems] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
+
+  // Build task lookup by id
+  const taskMap = useMemo(() => {
+    const map = {};
+    tasks.forEach(t => { map[t.id] = t; });
+    return map;
+  }, [tasks]);
+
+  // Derive columns from kanbanItems (during drag) or tasks (at rest)
+  const boardColumns = useMemo(() => {
+    if (kanbanItems) {
+      return KANBAN_STATUSES.map(status => ({
+        ...status,
+        tasks: (kanbanItems[status.id] || []).map(id => taskMap[id]).filter(Boolean),
+      }));
+    }
+    return KANBAN_STATUSES.map(status => ({
+      ...status,
+      tasks: tasks.filter(t => t.status === status.id),
+    }));
+  }, [tasks, kanbanItems, taskMap]);
+
+  const activeDragTask = activeId ? taskMap[activeId] : null;
+
+  // Find which column a task id belongs to in kanbanItems
+  const findColumn = (id) => {
+    if (!kanbanItems) return null;
+    // Check if it's a column id
+    if (typeof id === 'string' && id.startsWith('column-')) return id.replace('column-', '');
+    // Find the column containing this task
+    for (const status of KANBAN_STATUSES) {
+      if (kanbanItems[status.id]?.includes(id)) return status.id;
+    }
+    return null;
+  };
+
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id);
+    // Snapshot current layout into kanbanItems
+    const items = {};
+    KANBAN_STATUSES.forEach(status => {
+      items[status.id] = tasks.filter(t => t.status === status.id).map(t => t.id);
+    });
+    setKanbanItems(items);
+  };
+
+  const handleDragOver = (event) => {
+    const { active, over } = event;
+    if (!over || !kanbanItems) return;
+
+    const activeCol = findColumn(active.id);
+    let overCol;
+    let overIndex;
+
+    if (over.data?.current?.type === 'column') {
+      overCol = over.data.current.status;
+      overIndex = kanbanItems[overCol]?.length || 0; // append to end
+    } else if (typeof over.id === 'string' && over.id.startsWith('column-')) {
+      overCol = over.id.replace('column-', '');
+      overIndex = kanbanItems[overCol]?.length || 0;
+    } else {
+      overCol = findColumn(over.id);
+      overIndex = kanbanItems[overCol]?.indexOf(over.id) ?? 0;
+    }
+
+    if (!activeCol || !overCol) return;
+
+    if (activeCol === overCol) {
+      // Reorder within same column
+      const oldIndex = kanbanItems[activeCol].indexOf(active.id);
+      if (oldIndex !== overIndex && oldIndex !== -1) {
+        setKanbanItems(prev => ({
+          ...prev,
+          [activeCol]: arrayMove(prev[activeCol], oldIndex, overIndex),
+        }));
+      }
+      return;
+    }
+
+    // Move between columns
+    setKanbanItems(prev => {
+      const sourceItems = prev[activeCol].filter(id => id !== active.id);
+      const destItems = [...prev[overCol]];
+      destItems.splice(overIndex, 0, active.id);
+      return { ...prev, [activeCol]: sourceItems, [overCol]: destItems };
+    });
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    const items = kanbanItems;
+    setActiveId(null);
+    setKanbanItems(null);
+
+    if (!over || !items) return;
+
+    // Find final column from the kanbanItems snapshot
+    let newStatus = null;
+    for (const status of KANBAN_STATUSES) {
+      if (items[status.id]?.includes(active.id)) {
+        newStatus = status.id;
+        break;
+      }
+    }
+
+    if (newStatus) {
+      const task = taskMap[active.id];
+      if (task && task.status !== newStatus) {
+        updateTask(task.id, { status: newStatus });
+      }
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setKanbanItems(null);
+  };
 
   const handleAddTask = async (e) => {
     e.preventDefault();
@@ -1465,8 +1627,9 @@ function TasksTab({ tasks, projectId }) {
     }
   };
 
-  const activeTasks = tasks.filter(t => t.status !== 'done');
-  const doneTasks = tasks.filter(t => t.status === 'done');
+  const handleFieldUpdate = async (taskId, fieldKey, value) => {
+    await updateTask(taskId, { [fieldKey]: value });
+  };
 
   return (
     <div className="space-y-4">
@@ -1485,7 +1648,6 @@ function TasksTab({ tasks, projectId }) {
             {adding ? '...' : 'Add'}
           </Button>
         </div>
-        {/* Quick-set row: date + priority */}
         <div className="flex items-center gap-3 flex-wrap">
           <input
             type="date"
@@ -1519,37 +1681,35 @@ function TasksTab({ tasks, projectId }) {
         </div>
       </form>
 
-      {/* Active Tasks */}
-      {activeTasks.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium text-surface-on-variant">Next Steps ({activeTasks.length})</h4>
-          {activeTasks.map(task => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              onToggle={() => handleToggleStatus(task)}
-              onDelete={() => handleDelete(task.id)}
-            />
-          ))}
-        </div>
-      )}
+      {/* Kanban Board */}
+      {tasks.length > 0 ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={kanbanCollision}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+        >
+          <div className="grid grid-cols-3 gap-3">
+            {boardColumns.map(column => (
+              <KanbanColumn
+                key={column.id}
+                column={column}
+                onToggleStatus={handleToggleStatus}
+                onDelete={handleDelete}
+                onUpdate={handleFieldUpdate}
+              />
+            ))}
+          </div>
 
-      {/* Completed Tasks */}
-      {doneTasks.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium text-outline">Completed ({doneTasks.length})</h4>
-          {doneTasks.map(task => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              onToggle={() => handleToggleStatus(task)}
-              onDelete={() => handleDelete(task.id)}
-            />
-          ))}
-        </div>
-      )}
-
-      {tasks.length === 0 && (
+          <DragOverlay>
+            {activeDragTask && (
+              <KanbanCard task={activeDragTask} isDragOverlay />
+            )}
+          </DragOverlay>
+        </DndContext>
+      ) : (
         <p className="text-center text-outline py-4">
           No tasks yet. Add your first next step above.
         </p>
@@ -1558,77 +1718,78 @@ function TasksTab({ tasks, projectId }) {
   );
 }
 
-function TaskItem({ task, onToggle, onDelete }) {
-  const [showActions, setShowActions] = useState(false);
-  const isDone = task.status === 'done';
+function KanbanColumn({ column, onToggleStatus, onDelete, onUpdate }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `column-${column.id}`,
+    data: { type: 'column', status: column.id },
+  });
 
-  const borderColor = isDone ? 'border-l-transparent' :
-    task.priority === 'high' ? 'border-l-red-500/40' :
-    task.priority === 'medium' ? 'border-l-amber-400/40' :
-    'border-l-transparent';
-
-  const days = task.due_date ? daysUntil(task.due_date) : null;
-  const isOverdue = !isDone && days !== null && days < 0;
-  const isToday = days === 0;
+  const columnColors = {
+    todo: 'border-t-outline',
+    in_progress: 'border-t-blue-500',
+    done: 'border-t-green-500',
+  };
 
   return (
-    <Card
-      className={`p-3 border-l-2 ${borderColor} cursor-pointer transition-all ${isDone ? 'bg-surface opacity-60' : ''}`}
-      onClick={() => setShowActions(!showActions)}
+    <div
+      ref={setNodeRef}
+      className={`rounded-lg border-t-[3px] ${columnColors[column.id]} p-3 flex flex-col min-h-[200px] transition-all duration-200 ${
+        isOver ? 'bg-primary/5 ring-2 ring-primary/40' : 'bg-surface'
+      }`}
     >
-      <div className="flex items-start gap-3">
-        {/* Checkbox */}
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggle(); }}
-          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors mt-0.5 flex-shrink-0 ${
-            isDone
-              ? 'bg-green-500 border-green-500 text-white'
-              : 'border-outline hover:border-outline'
-          }`}
-        >
-          {isDone && (
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-        </button>
-
-        {/* Title + subtitle */}
-        <div className="flex-1 min-w-0">
-          <span className={`text-sm ${isDone ? 'line-through text-outline' : 'text-surface-on'}`}>
-            {task.title}
-          </span>
-          {task.subtitle && !isDone && (
-            <p className="text-xs text-surface-on-variant mt-0.5 truncate">{task.subtitle}</p>
-          )}
-        </div>
-
-        {/* Due date */}
-        {task.due_date && (
-          <span className={`text-xs flex-shrink-0 mt-0.5 ${
-            isOverdue ? 'text-red-600 font-medium' :
-            isToday ? 'text-amber-600 font-medium' :
-            'text-outline'
-          }`}>
-            {isOverdue ? `${Math.abs(days)}d overdue` :
-             isToday ? 'Today' :
-             formatDate(task.due_date)}
-          </span>
-        )}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-surface-on">{column.label}</h3>
+        <span className="text-xs text-outline bg-surface-container-highest px-2 py-0.5 rounded-full">
+          {column.tasks.length}
+        </span>
       </div>
 
-      {/* Actions */}
-      {showActions && (
-        <div className="mt-2 pt-2 border-t border-outline-variant flex justify-end">
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="text-xs text-red-600 hover:text-red-400"
-          >
-            Delete
-          </button>
+      <SortableContext
+        items={column.tasks.map(t => t.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-2 flex-1">
+          {column.tasks.map(task => (
+            <DraggableKanbanCard
+              key={task.id}
+              task={task}
+              onToggleStatus={() => onToggleStatus(task)}
+              onDelete={() => onDelete(task.id)}
+              onUpdate={(fieldKey, value) => onUpdate(task.id, fieldKey, value)}
+            />
+          ))}
+
+          {column.tasks.length === 0 && (
+            <div className="flex-1 flex items-center justify-center text-sm text-outline py-8">
+              Drop here
+            </div>
+          )}
         </div>
-      )}
-    </Card>
+      </SortableContext>
+    </div>
+  );
+}
+
+function DraggableKanbanCard({ task, onToggleStatus, onDelete, onUpdate }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <KanbanCard task={task} onToggleStatus={onToggleStatus} onDelete={onDelete} onUpdate={onUpdate} />
+    </div>
   );
 }
 

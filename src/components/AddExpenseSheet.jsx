@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useTransactions } from '@/hooks/useTransactions';
-import { useProjects } from '@/hooks/useProjects';
+import { useTransactions } from '@/contexts/TransactionsContext';
+import { useProjects } from '@/contexts/ProjectsContext';
 import { Sheet } from '@/components/ui/Sheet';
 import { Button } from '@/components/ui/Button';
 import { formatCurrency } from '@/lib/utils';

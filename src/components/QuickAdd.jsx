@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { useOpportunities } from '@/hooks/useOpportunities';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects } from '@/contexts/ProjectsContext';
 
 export function QuickAdd() {
   const [isOpen, setIsOpen] = useState(false);

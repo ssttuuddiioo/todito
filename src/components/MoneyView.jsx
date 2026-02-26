@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useTransactions } from '@/hooks/useTransactions';
-import { useProjects } from '@/hooks/useProjects';
+import { useTransactions } from '@/contexts/TransactionsContext';
+import { useProjects } from '@/contexts/ProjectsContext';
 import { useRecurring } from '@/hooks/useRecurring';
 import { useInvoices } from '@/hooks/useInvoices';
-import { usePeople } from '@/hooks/usePeople';
+import { usePeople } from '@/contexts/PeopleContext';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';

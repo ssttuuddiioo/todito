@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useProjects } from '@/hooks/useProjects';
-import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/contexts/ProjectsContext';
+import { useTasks } from '@/contexts/TasksContext';
 import {
   DndContext,
   PointerSensor,

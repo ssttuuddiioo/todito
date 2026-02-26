@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import { isStructuredFormat, parseStructuredNotes, normalizeWithLLM } from '@/lib/note-parser';
-import { useTasks } from '@/hooks/useTasks';
-import { useProjects } from '@/hooks/useProjects';
+import { useTasks } from '@/contexts/TasksContext';
+import { useProjects } from '@/contexts/ProjectsContext';
 import { useOpportunities } from '@/hooks/useOpportunities';
-import { usePeople } from '@/hooks/usePeople';
+import { usePeople } from '@/contexts/PeopleContext';
 import { useNotesArchive, useIgnoredItems } from '@/hooks/useNotesArchive';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
