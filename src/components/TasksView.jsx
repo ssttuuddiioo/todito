@@ -1189,7 +1189,6 @@ function DraggableTaskItem(props) {
 }
 
 function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatusChange, onEdit, onToggleFocus, selectedIds, onToggleSelect, selectionActive, dragHandleProps, isDragOverlay, compact, focusMode }) {
-  const [showActions, setShowActions] = useState(false);
   const isDone = task.status === 'done';
   const isSelected = selectedIds?.has(task.id);
 
@@ -1205,8 +1204,8 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
   const handleClick = () => {
     if (selectionActive) {
       onToggleSelect(task.id);
-    } else {
-      setShowActions(!showActions);
+    } else if (onEdit) {
+      onEdit();
     }
   };
 
@@ -1265,7 +1264,7 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
             {task.title}
           </span>
           {task.subtitle && !isDone && (
-            <p className="text-xs text-surface-on-variant mt-0.5 truncate">{task.subtitle}</p>
+            <p className="text-xs text-surface-on-variant mt-0.5 line-clamp-1">{task.subtitle}</p>
           )}
         </div>
 
@@ -1321,25 +1320,6 @@ function TaskItem({ task, projectName, showProject, onToggle, onDelete, onStatus
         )}
       </div>
 
-      {/* Expanded actions */}
-      {showActions && !selectionActive && (
-        <div className="mt-2 pt-2 border-t border-outline-variant flex items-center justify-end gap-2">
-          {onEdit && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="text-xs text-primary hover:text-primary font-medium"
-            >
-              Edit
-            </button>
-          )}
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="text-xs text-red-400 hover:text-red-400"
-          >
-            Delete
-          </button>
-        </div>
-      )}
     </Card>
   );
 }
@@ -1498,9 +1478,12 @@ function BoardCard({ task, projectName, isDragging, onToggleStatus, onDelete, on
   };
 
   return (
-    <div className={`bg-surface-container-highest rounded-md border border-outline-variant p-3 mb-2 ${
-      isDragging ? 'shadow-elevation-3 ring-2 ring-primary/30' : 'shadow-elevation-1 hover:shadow-elevation-2'
-    } transition-shadow cursor-grab active:cursor-grabbing`}>
+    <div
+      className={`bg-surface-container-highest rounded-md border border-outline-variant p-3 mb-2 ${
+        isDragging ? 'shadow-elevation-3 ring-2 ring-primary/30' : 'shadow-elevation-1 hover:shadow-elevation-2'
+      } transition-shadow cursor-grab active:cursor-grabbing`}
+      onClick={() => onEdit?.()}
+    >
       <div className="flex items-start gap-2">
         {task.priority && (
           <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${priorityDot[task.priority] || ''}`} />

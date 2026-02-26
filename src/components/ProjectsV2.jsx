@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
 import { AddExpenseSheet } from '@/components/AddExpenseSheet';
 import { AddIncomeSheet } from '@/components/AddIncomeSheet';
-import { isStructuredFormat, parseStructuredNotes, normalizeWithLLM, parseForNewProject } from '@/lib/note-parser';
+import { isStructuredFormat, parseStructuredNotes, normalizeWithLLM, parseForNewProject, summarizeProject } from '@/lib/note-parser';
 import { formatCurrency, formatDate, daysUntil } from '@/lib/utils';
 
 export function ProjectsV2({ onNavigate, initialProjectId, initialTab, onBack: onBackProp }) {
@@ -188,6 +188,12 @@ function ProjectDetail({ project, initialTab, onBack, onUpdate, onDelete }) {
   const [showExpenseSheet, setShowExpenseSheet] = useState(false);
   const [showIncomeSheet, setShowIncomeSheet] = useState(false);
 
+  // Inline header editing
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState('');
+  const [editingClient, setEditingClient] = useState(false);
+  const [clientValue, setClientValue] = useState('');
+
   const projIncome = project.incomeList.reduce((s, t) => s + parseFloat(t.amount || 0), 0);
   const projExpenses = project.expensesList.reduce((s, t) => s + parseFloat(t.amount || 0), 0);
   const margin = projIncome > 0 ? ((projIncome - projExpenses) / projIncome) * 100 : null;
@@ -231,10 +237,51 @@ function ProjectDetail({ project, initialTab, onBack, onUpdate, onDelete }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-surface-on">{project.name}</h1>
-          {(project.client || project.client_name) && (
-            <p className="text-surface-on-variant">{project.client || project.client_name}</p>
+        <div className="flex-1 min-w-0">
+          {editingName ? (
+            <input
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              onBlur={async () => {
+                if (nameValue.trim() && nameValue.trim() !== project.name) {
+                  await onUpdate(project.id, { name: nameValue.trim() });
+                }
+                setEditingName(false);
+              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') setEditingName(false); }}
+              className="text-2xl font-bold text-surface-on bg-transparent border-b-2 border-primary outline-none w-full"
+              autoFocus
+            />
+          ) : (
+            <h1
+              className="text-2xl font-bold text-surface-on cursor-text hover:bg-surface-container-low rounded px-1 -mx-1 transition-colors"
+              onClick={() => { setNameValue(project.name); setEditingName(true); }}
+            >
+              {project.name}
+            </h1>
+          )}
+          {editingClient ? (
+            <input
+              value={clientValue}
+              onChange={(e) => setClientValue(e.target.value)}
+              onBlur={async () => {
+                if (clientValue.trim() !== (project.client || '')) {
+                  await onUpdate(project.id, { client: clientValue.trim() || null });
+                }
+                setEditingClient(false);
+              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') setEditingClient(false); }}
+              className="text-surface-on-variant bg-transparent border-b-2 border-primary outline-none w-full mt-0.5"
+              placeholder="Add client..."
+              autoFocus
+            />
+          ) : (
+            <p
+              className="text-surface-on-variant cursor-text hover:bg-surface-container-low rounded px-1 -mx-1 transition-colors mt-0.5"
+              onClick={() => { setClientValue(project.client || ''); setEditingClient(true); }}
+            >
+              {project.client || project.client_name || <span className="text-outline italic">Add client...</span>}
+            </p>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -670,6 +717,24 @@ function OverviewTab({ project, editing, editData, setEditData, onEdit, onSave, 
     </svg>
   );
 
+  // AI Summary
+  const [aiSummary, setAiSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState(null);
+
+  const handleSummarize = async () => {
+    setSummaryLoading(true);
+    setSummaryError(null);
+    try {
+      const summary = await summarizeProject(project);
+      setAiSummary(summary);
+    } catch (err) {
+      setSummaryError(err.message);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   // Inline-editable detail fields
   const [editingField, setEditingField] = useState(null);
   const [fieldValue, setFieldValue] = useState('');
@@ -722,6 +787,35 @@ function OverviewTab({ project, editing, editData, setEditData, onEdit, onSave, 
           >
             {project.scope || <span className="text-outline italic">Click to define project scope...</span>}
           </div>
+        )}
+      </Card>
+
+      {/* ===== AI SUMMARY ===== */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold text-surface-on">AI Summary</h3>
+          <button
+            onClick={handleSummarize}
+            disabled={summaryLoading}
+            className="text-xs text-primary hover:opacity-90 font-medium disabled:opacity-50"
+          >
+            {summaryLoading ? 'Analyzing...' : aiSummary ? 'Refresh' : 'Summarize'}
+          </button>
+        </div>
+        {summaryLoading && (
+          <div className="flex items-center gap-2 text-sm text-surface-on-variant">
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            Analyzing project...
+          </div>
+        )}
+        {summaryError && (
+          <p className="text-sm text-red-400">{summaryError}</p>
+        )}
+        {aiSummary && !summaryLoading && (
+          <p className="text-sm text-surface-on-variant whitespace-pre-wrap">{aiSummary}</p>
+        )}
+        {!aiSummary && !summaryLoading && !summaryError && (
+          <p className="text-sm text-outline italic">Click "Summarize" to get an AI analysis of this project's status.</p>
         )}
       </Card>
 

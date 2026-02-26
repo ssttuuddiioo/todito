@@ -450,6 +450,66 @@ export async function parseForNewProject(noteText) {
 }
 
 // ---------------------------------------------------------------------------
+// AI Project Summary
+// ---------------------------------------------------------------------------
+
+const PROJECT_SUMMARY_PROMPT = `You are a project management assistant. Given the project data below, write a concise 2-3 sentence status summary. Focus on: what's been accomplished, what's in progress, what's blocked or overdue, and the most important next step. Be direct and specific — no filler. Use plain language.`;
+
+export async function summarizeProject(project) {
+  if (!project) return null;
+
+  const tasks = project.tasks || [];
+  const done = tasks.filter(t => t.status === 'done');
+  const inProgress = tasks.filter(t => t.status === 'in_progress');
+  const todo = tasks.filter(t => t.status === 'todo');
+  const overdue = tasks.filter(t => t.due_date && t.status !== 'done' && new Date(t.due_date) < new Date());
+
+  const context = [
+    `Project: ${project.name}`,
+    project.client ? `Client: ${project.client}` : null,
+    project.scope ? `Scope: ${project.scope}` : null,
+    project.phase ? `Phase: ${project.phase}` : null,
+    project.deadline ? `Deadline: ${project.deadline}` : null,
+    project.notes ? `Notes: ${project.notes}` : null,
+    `Tasks: ${done.length} done, ${inProgress.length} in progress, ${todo.length} to do`,
+    overdue.length > 0 ? `Overdue tasks: ${overdue.map(t => t.title).join(', ')}` : null,
+    inProgress.length > 0 ? `In progress: ${inProgress.map(t => t.title).join(', ')}` : null,
+    todo.length > 0 ? `Next up: ${todo.slice(0, 5).map(t => t.title).join(', ')}` : null,
+    project.milestones?.length > 0 ? `Milestones: ${project.milestones.map(m => `${m.title}${m.completed ? ' (done)' : ''}`).join(', ')}` : null,
+  ].filter(Boolean).join('\n');
+
+  const isProduction = import.meta.env.PROD;
+  const apiUrl = isProduction
+    ? '/api/anthropic/messages'
+    : (import.meta.env.VITE_PROXY_URL || 'http://localhost:3001') + '/api/anthropic/messages';
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 512,
+      system: PROJECT_SUMMARY_PROMPT,
+      messages: [{ role: 'user', content: context }],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    const errorMessage = errorData.error || errorData.details?.message || `HTTP error! status: ${response.status}`;
+    throw new Error(`${response.status} ${errorMessage}`);
+  }
+
+  const message = await response.json();
+  const content = message.content[0];
+  if (content.type !== 'text') {
+    throw new Error('Unexpected response type from Anthropic API');
+  }
+
+  return content.text;
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
